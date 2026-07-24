@@ -102,14 +102,13 @@ def format_count(num):
         return f"{num / 1e3:.0f}K"
     return str(num)
 
-# Helper function to auto-format Horizontal Bar Charts into Descending order & force Legend
-def format_hbar_chart(fig, height=300):
-    fig.update_yaxes(categoryorder="total ascending")
+# Helper function to auto-format Horizontal Bar Charts into Descending order with visible Titles
+def format_hbar_chart(fig, x_title="Shipment Count", y_title="Location", height=320):
+    fig.update_yaxes(categoryorder="total ascending", title=y_title)
+    fig.update_xaxes(title=x_title)
     fig.update_layout(
-        margin=dict(l=0, r=0, t=20, b=0),
+        margin=dict(l=80, r=20, t=35, b=45),
         height=height,
-        xaxis_title=None,
-        yaxis_title=None,
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
@@ -269,7 +268,7 @@ if page == "SHORTAGE VIEW":
         )
         fig_loc = px.bar(loc_df, x='Shipment Count', y='Location', orientation='h', color_discrete_sequence=['#1f77b4'])
         fig_loc.update_traces(name="Shipments")
-        format_hbar_chart(fig_loc, height=300)
+        format_hbar_chart(fig_loc, x_title="Shipment Count", y_title="Location", height=320)
         st.plotly_chart(fig_loc, use_container_width=True)
 
     with col_right:
@@ -277,12 +276,11 @@ if page == "SHORTAGE VIEW":
         trend_df = filtered_df.groupby(['Month'])['Total Amount'].sum().reset_index().sort_values('Month')
         fig_trend = px.line(trend_df, x='Month', y='Total Amount', markers=True, color_discrete_sequence=['#d9383a'])
         fig_trend.update_traces(name="Shortage Loss Amount")
-        fig_trend.update_xaxes(dtick="M2", tickformat="%b %Y")
-        fig_trend.update_yaxes(dtick=2000000)
+        fig_trend.update_xaxes(dtick="M2", tickformat="%b %Y", title="Month")
+        fig_trend.update_yaxes(dtick=2000000, title="Loss Amount (₹)")
         fig_trend.update_layout(
-            margin=dict(l=0, r=0, t=20, b=0), 
-            height=300, 
-            xaxis_title=None, 
+            margin=dict(l=70, r=20, t=35, b=45), 
+            height=320, 
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -302,7 +300,7 @@ if page == "SHORTAGE VIEW":
         )
         fig_user = px.bar(user_df, x='Shipment Count', y='Assigned user', orientation='h', color_discrete_sequence=['#ff7f0e'])
         fig_user.update_traces(name="Shipments")
-        format_hbar_chart(fig_user, height=280)
+        format_hbar_chart(fig_user, x_title="Shipment Count", y_title="Assigned User", height=300)
         st.plotly_chart(fig_user, use_container_width=True)
 
     with col_bottom_right:
@@ -322,7 +320,7 @@ if page == "SHORTAGE VIEW":
             },
             hide_index=True,
             use_container_width=True,
-            height=280
+            height=300
         )
 
 
@@ -415,13 +413,11 @@ elif page == "DEBIT VIEW":
         w_trend = filtered_weekly.groupby(['Month'])['Value'].sum().reset_index().sort_values('Month')
         fig_w = px.line(w_trend, x='Month', y='Value', markers=True)
         fig_w.update_traces(line_color='#007bff', fill='tozeroy', fillcolor='rgba(0,123,255,0.1)', name="Weekly Debit Amount")
-        fig_w.update_xaxes(dtick="M2", tickformat="%b %Y")
-        fig_w.update_yaxes(dtick=2000000)
+        fig_w.update_xaxes(dtick="M2", tickformat="%b %Y", title="Month")
+        fig_w.update_yaxes(dtick=2000000, title="Debit Amount (₹)")
         fig_w.update_layout(
-            margin=dict(l=0, r=0, t=20, b=0), 
-            height=300, 
-            yaxis_title=None, 
-            xaxis_title=None,
+            margin=dict(l=70, r=20, t=35, b=45), 
+            height=320, 
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -432,13 +428,11 @@ elif page == "DEBIT VIEW":
         o_trend = filtered_debit.groupby(['Month'])['Total amount'].sum().reset_index().sort_values('Month')
         fig_o = px.line(o_trend, x='Month', y='Total amount', markers=True)
         fig_o.update_traces(line_color='#d9383a', fill='tozeroy', fillcolor='rgba(217,56,58,0.15)', name="Overall Debit Amount")
-        fig_o.update_xaxes(dtick="M2", tickformat="%b %Y")
-        fig_o.update_yaxes(dtick=2000000)
+        fig_o.update_xaxes(dtick="M2", tickformat="%b %Y", title="Month")
+        fig_o.update_yaxes(dtick=2000000, title="Debit Amount (₹)")
         fig_o.update_layout(
-            margin=dict(l=0, r=0, t=20, b=0), 
-            height=300, 
-            yaxis_title=None, 
-            xaxis_title=None,
+            margin=dict(l=70, r=20, t=35, b=45), 
+            height=320, 
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -470,13 +464,11 @@ elif page == "DEBIT VIEW":
             color='Location', 
             barmode='stack'
         )
-        fig_top5.update_xaxes(dtick="M2", tickformat="%b %Y")
-        fig_top5.update_yaxes(dtick=2000000)
+        fig_top5.update_xaxes(dtick="M2", tickformat="%b %Y", title="Month")
+        fig_top5.update_yaxes(dtick=2000000, title="Total Amount (₹)")
         fig_top5.update_layout(
-            margin=dict(l=0, r=0, t=20, b=0), 
-            height=300, 
-            xaxis_title=None, 
-            yaxis_title=None,
+            margin=dict(l=70, r=20, t=35, b=45), 
+            height=320, 
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
@@ -493,8 +485,8 @@ elif page == "DEBIT VIEW":
         fig_donut = px.pie(loss_cat, values='Total amount', names='Loss Type', hole=0.5,
                            color_discrete_map={'Shortage': '#d9383a', 'At facility': '#4CAF50', 'In-transit': '#FFC107'})
         fig_donut.update_layout(
-            margin=dict(l=0, r=0, t=20, b=0), 
-            height=300,
+            margin=dict(l=20, r=20, t=30, b=30), 
+            height=320,
             showlegend=True,
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
         )
