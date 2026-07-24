@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 # -----------------------------------------------------------------------------
 # PAGE CONFIGURATION
@@ -35,11 +36,12 @@ st.markdown("""
         border: 1px solid #e0e0e0;
         border-radius: 8px;
         padding: 15px;
+        height: 100%;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Standard All 12 Months List for Dropdowns
+# Standard All 12 Months List
 ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 # -----------------------------------------------------------------------------
@@ -60,7 +62,7 @@ def load_data():
             df['Month'] = pd.to_datetime(df['Month'])
             df['Year'] = df['Month'].dt.year.astype(str)
             df['Month_Name'] = df['Month'].dt.strftime('%b')
-            # Sort dataframe by actual date to preserve timeline ordering in charts
+            df['Month_Year'] = df['Month'].dt.strftime('%b %Y')
             df.sort_values(by='Month', inplace=True)
 
     return debit_df, weekly_df, shortage_df
@@ -75,7 +77,7 @@ except Exception as e:
 # Helper formatting functions
 def format_currency(num):
     if num >= 1e7:
-        return f"₹ {num / 1e7:.1f} Cr"
+        return f"₹ {num / 1e7:.2f} Cr"
     elif num >= 1e5:
         return f"₹ {num / 1e5:.2f} L"
     elif num >= 1e3:
@@ -150,11 +152,10 @@ if page == "SHORTAGE VIEW":
             </div>
         """, unsafe_allow_html=True)
 
-    # Dynamic Insight Calculation
     top_cat = filtered_df['Assigned/ marked'].mode()[0] if not filtered_df.empty else "N/A"
     top_loc = filtered_df['Location'].mode()[0] if not filtered_df.empty else "N/A"
     top_reason = filtered_df['Shorage type'].mode()[0] if not filtered_df.empty else "N/A"
-    peak_month = filtered_df.groupby('Month_Name')['Total Amount'].sum().idxmax() if not filtered_df.empty else "N/A"
+    peak_month = filtered_df.groupby('Month_Year')['Total Amount'].sum().idxmax() if not filtered_df.empty else "N/A"
 
     with c3:
         st.markdown(f"""
@@ -173,29 +174,34 @@ if page == "SHORTAGE VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- MIDDLE SECTION: CHARTS ---
+    # --- CHARTS ---
     col_left, col_right = st.columns(2)
 
     with col_left:
         st.markdown("##### Top Locations Creating Shortages")
         loc_df = filtered_df.groupby('Location').size().reset_index(name='Shipment Count')
-        loc_df = loc_df.set_index('Location')
-        st.bar_chart(loc_df, horizontal=True)
+        loc_df = loc_df.sort_values(by='Shipment Count', ascending=True)
+        fig_loc = px.bar(loc_df, x='Shipment Count', y='Location', orientation='h', color_discrete_sequence=['#1f77b4'])
+        fig_loc.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300)
+        st.plotly_chart(fig_loc, use_container_width=True)
 
     with col_right:
         st.markdown("##### Shortage Trend")
-        trend_df = filtered_df.groupby(['Month', 'Month_Name'])['Total Amount'].sum().reset_index()
-        trend_df = trend_df.sort_values(by='Month').set_index('Month_Name')[['Total Amount']]
-        st.line_chart(trend_df)
+        trend_df = filtered_df.groupby(['Month', 'Month_Year'])['Total Amount'].sum().reset_index().sort_values('Month')
+        fig_trend = px.line(trend_df, x='Month_Year', y='Total Amount', markers=True, color_discrete_sequence=['#d9383a'])
+        fig_trend.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, xaxis_title=None)
+        st.plotly_chart(fig_trend, use_container_width=True)
 
-    # --- BOTTOM SECTION: USERS & TABLE ---
+    # --- BOTTOM SECTION ---
     col_bottom_left, col_bottom_right = st.columns([1, 1.2])
 
     with col_bottom_left:
         st.markdown("##### Top Users Creating Shortages")
         user_df = filtered_df.groupby('Assigned user').size().reset_index(name='Shipment Count')
-        user_df = user_df.sort_values(by='Shipment Count', ascending=False).head(7).set_index('Assigned user')
-        st.bar_chart(user_df, horizontal=True)
+        user_df = user_df.sort_values(by='Shipment Count', ascending=False).head(7)
+        fig_user = px.bar(user_df, x='Shipment Count', y='Assigned user', orientation='h', color_discrete_sequence=['#ff7f0e'])
+        fig_user.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=280)
+        st.plotly_chart(fig_user, use_container_width=True)
 
     with col_bottom_right:
         st.markdown("##### Detail Summary Table")
@@ -296,39 +302,46 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- MIDDLE SECTION: TRENDS ---
+    # --- MIDDLE SECTION: TRENDS (col_l1, col_l2) ---
     col_l1, col_l2 = st.columns(2)
 
     with col_l1:
         st.markdown("##### WEEKLY DEBIT- MONTHLY TREND")
-        w_trend = filtered_weekly.groupby(['Month', 'Month_Name'])['Value'].sum().reset_index()
-        w_trend = w_trend.sort_values(by='Month').set_index('Month_Name')[['Value']]
-        st.line_chart(w_trend)
+        w_trend = filtered_weekly.groupby(['Month', 'Month_Year'])['Value'].sum().reset_index().sort_values('Month')
+        fig_w = px.line(w_trend, x='Month_Year', y='Value', markers=True)
+        fig_w.update_traces(line_color='#007bff', fill='tozeroy', fillcolor='rgba(0,123,255,0.1)')
+        fig_w.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, yaxis_title=None, xaxis_title=None)
+        st.plotly_chart(fig_w, use_container_width=True)
 
     with col_l2:
         st.markdown("##### OVERALL DEBIT- MONTHLY TREND")
-        o_trend = filtered_debit.groupby(['Month', 'Month_Name'])['Total amount'].sum().reset_index()
-        o_trend = o_trend.sort_values(by='Month').set_index('Month_Name')[['Total amount']]
-        st.line_chart(o_trend)
+        o_trend = filtered_debit.groupby(['Month', 'Month_Year'])['Total amount'].sum().reset_index().sort_values('Month')
+        fig_o = px.line(o_trend, x='Month_Year', y='Total amount', markers=True)
+        fig_o.update_traces(line_color='#d9383a', fill='tozeroy', fillcolor='rgba(217,56,58,0.15)')
+        fig_o.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, yaxis_title=None, xaxis_title=None)
+        st.plotly_chart(fig_o, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- BOTTOM SECTION: CATEGORY OVERVIEW & KEY INSIGHTS ---
+    # --- BOTTOM SECTION: CATEGORY & INSIGHTS (col_b1, col_b2) ---
     col_b1, col_b2 = st.columns(2)
 
     with col_b1:
         st.markdown("##### OVERALL LOSS CATEGORY OVERVIEW")
-        loss_cat = filtered_debit.groupby('Loss Type')['Total amount'].sum().reset_index().set_index('Loss Type')
-        st.bar_chart(loss_cat)
+        loss_cat = filtered_debit.groupby('Loss Type')['Total amount'].sum().reset_index()
+        fig_donut = px.pie(loss_cat, values='Total amount', names='Loss Type', hole=0.5,
+                           color_discrete_map={'Shortage': '#d9383a', 'At facility': '#4CAF50', 'In-transit': '#FFC107'})
+        fig_donut.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300)
+        st.plotly_chart(fig_donut, use_container_width=True)
 
     with col_b2:
-        top_loss_month = filtered_debit.groupby('Month_Name')['Total amount'].sum().idxmax() if not filtered_debit.empty else "N/A"
+        top_loss_month = filtered_debit.groupby('Month_Year')['Total amount'].sum().idxmax() if not filtered_debit.empty else "N/A"
         top_loss_loc = filtered_debit['Location'].mode()[0] if not filtered_debit.empty else "N/A"
         
         st.markdown(f"""
-            <div class="insight-card" style="margin-top: 25px;">
-                <b>Key Insights</b>
-                <ul style="margin-top: 8px; margin-bottom: 0px;">
+            <div class="insight-card">
+                <h5 style="margin-top: 0px;">Key Insights</h5>
+                <ul style="margin-top: 15px; font-size: 15px; line-height: 1.8;">
                     <li><b>Highest loss month:</b> {top_loss_month}</li>
                     <li><b>Highest loss location:</b> {top_loss_loc}</li>
                     <li><b>Total shipments impacted:</b> {total_shipment_count:,}</li>
