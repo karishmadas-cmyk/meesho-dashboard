@@ -39,8 +39,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Standard Month Order List for Reference
-MONTH_ORDER = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+# Standard All 12 Months List for Dropdowns
+ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 # -----------------------------------------------------------------------------
 # DATA LOADING & PREPROCESSING
@@ -60,7 +60,7 @@ def load_data():
             df['Month'] = pd.to_datetime(df['Month'])
             df['Year'] = df['Month'].dt.year.astype(str)
             df['Month_Name'] = df['Month'].dt.strftime('%b')
-            # Sort dataframe by actual date to preserve chronological month order
+            # Sort dataframe by actual date to preserve timeline ordering in charts
             df.sort_values(by='Month', inplace=True)
 
     return debit_df, weekly_df, shortage_df
@@ -108,9 +108,7 @@ if page == "SHORTAGE VIEW":
     years = ["All"] + sorted(list(shortage_df['Year'].dropna().unique()))
     sel_year = f1.selectbox("Year", years, index=0)
     
-    # Chronologically sorted months present in the shortage data
-    sorted_months = [m for m in MONTH_ORDER if m in shortage_df['Month_Name'].unique()]
-    months = ["All"] + sorted_months
+    months = ["All"] + ALL_MONTHS
     sel_month = f2.selectbox("Month", months, index=0)
     
     assigned_opts = ["All"] + list(shortage_df['Assigned/ marked'].dropna().unique())
@@ -186,7 +184,6 @@ if page == "SHORTAGE VIEW":
 
     with col_right:
         st.markdown("##### Shortage Trend")
-        # Ensure chronological order by grouping with actual date
         trend_df = filtered_df.groupby(['Month', 'Month_Name'])['Total Amount'].sum().reset_index()
         trend_df = trend_df.sort_values(by='Month').set_index('Month_Name')[['Total Amount']]
         st.line_chart(trend_df)
@@ -233,9 +230,7 @@ elif page == "DEBIT VIEW":
     years = ["All"] + sorted(list(debit_df['Year'].dropna().unique()))
     sel_year = f1.selectbox("Year", years, index=0)
     
-    # Chronologically sorted months present in debit data
-    sorted_debit_months = [m for m in MONTH_ORDER if m in debit_df['Month_Name'].unique()]
-    months = ["All"] + sorted_debit_months
+    months = ["All"] + ALL_MONTHS
     sel_month = f2.selectbox("Month", months, index=0)
     
     locations = ["All"] + list(debit_df['Location'].dropna().unique())
