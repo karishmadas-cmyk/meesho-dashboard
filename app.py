@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Styling for KPI Cards & Insight Boxes
+# Custom Styling for KPI Cards & Insight Boxes (Mobile & Dark Mode Friendly)
 st.markdown("""
     <style>
     .kpi-card {
@@ -21,15 +21,16 @@ st.markdown("""
         padding: 15px;
         text-align: center;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        color: #212529 !important;
     }
     .kpi-value {
         font-size: 26px;
         font-weight: bold;
-        color: #d9383a;
+        color: #d9383a !important;
     }
     .kpi-label {
         font-size: 13px;
-        color: #666666;
+        color: #555555 !important;
     }
     .insight-card {
         background-color: #ffffff;
@@ -37,6 +38,16 @@ st.markdown("""
         border-radius: 8px;
         padding: 15px;
         height: 100%;
+        color: #212529 !important;
+        word-wrap: break-word;
+    }
+    /* Ensure all headers, bullet points, and text inside insight cards stay dark */
+    .insight-card h5, 
+    .insight-card b, 
+    .insight-card li, 
+    .insight-card span,
+    .insight-card div {
+        color: #212529 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -92,7 +103,7 @@ def format_count(num):
         return f"{num / 1e3:.0f}K"
     return str(num)
 
-# Auto-format Horizontal Bar Charts into Descending order (largest at top)
+# Helper function to auto-format Horizontal Bar Charts into Descending order
 def format_hbar_chart(fig, height=300):
     fig.update_yaxes(categoryorder="total ascending")
     fig.update_layout(
@@ -107,13 +118,11 @@ def format_hbar_chart(fig, height=300):
 def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
     d = df.copy()
     
-    # Apply category & location filters first to preserve full time series
     if sel_location != "All":
         d = d[d['Location'] == sel_location]
     if sel_loss_type != "All":
         d = d[d['Loss Type'] == sel_loss_type]
     
-    # Group by chronological Month
     monthly = d.groupby('Month')['Total amount'].sum().reset_index().sort_values('Month')
     
     if monthly.empty:
@@ -122,7 +131,6 @@ def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
     monthly['Year_str'] = monthly['Month'].dt.year.astype(str)
     monthly['Month_Name_str'] = monthly['Month'].dt.strftime('%b')
 
-    # Case A: Specific Month Selected
     if sel_month != "All":
         if sel_year != "All":
             target_rows = monthly[(monthly['Year_str'] == sel_year) & (monthly['Month_Name_str'] == sel_month)]
@@ -140,8 +148,6 @@ def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
             prev_val = monthly.iloc[pos - 1]['Total amount']
         else:
             return "N/A", "#666666"
-
-    # Case B: All Months Selected
     else:
         if sel_year != "All":
             monthly = monthly[monthly['Year_str'] == sel_year]
@@ -158,9 +164,9 @@ def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
     pct_change = ((curr_val - prev_val) / prev_val) * 100
     
     if pct_change > 0:
-        return f"+{pct_change:.1f}%", "#d9383a"  # Red for loss increase
+        return f"+{pct_change:.1f}%", "#d9383a"
     elif pct_change < 0:
-        return f"{pct_change:.1f}%", "#28a745"   # Green for loss reduction
+        return f"{pct_change:.1f}%", "#28a745"
     else:
         return "0.0%", "#666666"
 
@@ -234,8 +240,8 @@ if page == "SHORTAGE VIEW":
     with c3:
         st.markdown(f"""
             <div class="insight-card">
-                <b>Shortage Insights</b>
-                <ul style="margin-top: 8px; margin-bottom: 0px;">
+                <h5 style="margin-top: 0px; margin-bottom: 8px;">Shortage Insights</h5>
+                <ul style="margin-top: 0px; margin-bottom: 0px; padding-left: 20px;">
                     <li><b>Highest category:</b> {top_cat}</li>
                     <li><b>Total shortage cases:</b> {total_short_shipments:,}</li>
                     <li><b>Total shortage loss value:</b> ₹{total_shortage_amount:,.0f}</li>
@@ -384,14 +390,14 @@ elif page == "DEBIT VIEW":
     with c4:
         st.markdown(f"""
             <div class="kpi-card">
-                <div class="kpi-value" style="color: {mom_color};">{mom_value}</div>
+                <div class="kpi-value" style="color: {mom_color} !important;">{mom_value}</div>
                 <div class="kpi-label">Debit MoM (vs last month)</div>
             </div>
         """, unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- MIDDLE SECTION: TRENDS (col_l1, col_l2) ---
+    # --- MIDDLE SECTION: TRENDS ---
     col_l1, col_l2 = st.columns(2)
 
     with col_l1:
@@ -452,7 +458,7 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- BOTTOM SECTION: CATEGORY & INSIGHTS (col_b1, col_b2) ---
+    # --- BOTTOM SECTION: CATEGORY & INSIGHTS ---
     col_b1, col_b2 = st.columns(2)
 
     with col_b1:
@@ -469,8 +475,8 @@ elif page == "DEBIT VIEW":
         
         st.markdown(f"""
             <div class="insight-card">
-                <h5 style="margin-top: 0px;">Key Insights</h5>
-                <ul style="margin-top: 15px; font-size: 15px; line-height: 1.8;">
+                <h5 style="margin-top: 0px; margin-bottom: 8px;">Key Insights</h5>
+                <ul style="margin-top: 0px; margin-bottom: 0px; padding-left: 20px; font-size: 14px; line-height: 1.8;">
                     <li><b>Highest loss month:</b> {top_loss_month}</li>
                     <li><b>Highest loss location:</b> {top_loss_loc}</li>
                     <li><b>Total shipments impacted:</b> {total_shipment_count:,}</li>
