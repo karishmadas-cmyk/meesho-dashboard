@@ -74,7 +74,9 @@ except Exception as e:
     st.stop()
 
 
-# Helper formatting functions
+# -----------------------------------------------------------------------------
+# HELPER FUNCTIONS
+# -----------------------------------------------------------------------------
 def format_currency(num):
     if num >= 1e7:
         return f"₹ {num / 1e7:.2f} Cr"
@@ -90,7 +92,7 @@ def format_count(num):
         return f"{num / 1e3:.0f}K"
     return str(num)
 
-# Helper function to auto-format Horizontal Bar Charts into Descending order (largest at top)
+# Auto-format Horizontal Bar Charts into Descending order (largest at top)
 def format_hbar_chart(fig, height=300):
     fig.update_yaxes(categoryorder="total ascending")
     fig.update_layout(
@@ -100,6 +102,67 @@ def format_hbar_chart(fig, height=300):
         yaxis_title=None
     )
     return fig
+
+# Dynamic MoM Calculation Function
+def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
+    d = df.copy()
+    
+    # Apply category & location filters first to preserve full time series
+    if sel_location != "All":
+        d = d[d['Location'] == sel_location]
+    if sel_loss_type != "All":
+        d = d[d['Loss Type'] == sel_loss_type]
+    
+    # Group by chronological Month
+    monthly = d.groupby('Month')['Total amount'].sum().reset_index().sort_values('Month')
+    
+    if monthly.empty:
+        return "N/A", "#666666"
+
+    monthly['Year_str'] = monthly['Month'].dt.year.astype(str)
+    monthly['Month_Name_str'] = monthly['Month'].dt.strftime('%b')
+
+    # Case A: Specific Month Selected
+    if sel_month != "All":
+        if sel_year != "All":
+            target_rows = monthly[(monthly['Year_str'] == sel_year) & (monthly['Month_Name_str'] == sel_month)]
+        else:
+            target_rows = monthly[monthly['Month_Name_str'] == sel_month]
+        
+        if target_rows.empty:
+            return "N/A", "#666666"
+        
+        target_idx = target_rows.index[-1]
+        curr_val = monthly.loc[target_idx, 'Total amount']
+        
+        pos = monthly.index.get_loc(target_idx)
+        if pos > 0:
+            prev_val = monthly.iloc[pos - 1]['Total amount']
+        else:
+            return "N/A", "#666666"
+
+    # Case B: All Months Selected
+    else:
+        if sel_year != "All":
+            monthly = monthly[monthly['Year_str'] == sel_year]
+        
+        if len(monthly) < 2:
+            return "N/A", "#666666"
+            
+        curr_val = monthly.iloc[-1]['Total amount']
+        prev_val = monthly.iloc[-2]['Total amount']
+
+    if prev_val == 0:
+        return "+100%", "#d9383a"
+        
+    pct_change = ((curr_val - prev_val) / prev_val) * 100
+    
+    if pct_change > 0:
+        return f"+{pct_change:.1f}%", "#d9383a"  # Red for loss increase
+    elif pct_change < 0:
+        return f"{pct_change:.1f}%", "#28a745"   # Green for loss reduction
+    else:
+        return "0.0%", "#666666"
 
 
 # -----------------------------------------------------------------------------
@@ -291,6 +354,9 @@ elif page == "DEBIT VIEW":
     overall_debit_amount = filtered_debit['Total amount'].sum()
     weekly_debit_amount = filtered_weekly['Value'].sum()
 
+    # Calculate Dynamic MoM
+    mom_value, mom_color = calculate_debit_mom(debit_df, sel_year, sel_month, sel_location, sel_loss_type)
+
     with c1:
         st.markdown(f"""
             <div class="kpi-card">
@@ -318,7 +384,7 @@ elif page == "DEBIT VIEW":
     with c4:
         st.markdown(f"""
             <div class="kpi-card">
-                <div class="kpi-value">0%</div>
+                <div class="kpi-value" style="color: {mom_color};">{mom_value}</div>
                 <div class="kpi-label">Debit MoM (vs last month)</div>
             </div>
         """, unsafe_allow_html=True)
