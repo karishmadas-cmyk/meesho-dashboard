@@ -90,6 +90,17 @@ def format_count(num):
         return f"{num / 1e3:.0f}K"
     return str(num)
 
+# Helper function to auto-format Horizontal Bar Charts into Descending order (largest at top)
+def format_hbar_chart(fig, height=300):
+    fig.update_yaxes(categoryorder="total ascending")
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=20, b=0),
+        height=height,
+        xaxis_title=None,
+        yaxis_title=None
+    )
+    return fig
+
 
 # -----------------------------------------------------------------------------
 # NAVIGATION SIDEBAR
@@ -180,9 +191,8 @@ if page == "SHORTAGE VIEW":
     with col_left:
         st.markdown("##### Top Locations Creating Shortages")
         loc_df = filtered_df.groupby('Location').size().reset_index(name='Shipment Count')
-        loc_df = loc_df.sort_values(by='Shipment Count', ascending=True)
         fig_loc = px.bar(loc_df, x='Shipment Count', y='Location', orientation='h', color_discrete_sequence=['#1f77b4'])
-        fig_loc.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300)
+        format_hbar_chart(fig_loc, height=300)
         st.plotly_chart(fig_loc, use_container_width=True)
 
     with col_right:
@@ -200,9 +210,8 @@ if page == "SHORTAGE VIEW":
     with col_bottom_left:
         st.markdown("##### Top Users Creating Shortages")
         user_df = filtered_df.groupby('Assigned user').size().reset_index(name='Shipment Count')
-        user_df = user_df.sort_values(by='Shipment Count', ascending=False).head(7)
         fig_user = px.bar(user_df, x='Shipment Count', y='Assigned user', orientation='h', color_discrete_sequence=['#ff7f0e'])
-        fig_user.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=280)
+        format_hbar_chart(fig_user, height=280)
         st.plotly_chart(fig_user, use_container_width=True)
 
     with col_bottom_right:
