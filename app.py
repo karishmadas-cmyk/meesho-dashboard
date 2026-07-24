@@ -57,7 +57,7 @@ def load_data():
         if 'Month' in df.columns:
             df['Month'] = pd.to_datetime(df['Month'])
             df['Year'] = df['Month'].dt.year.astype(str)
-            df['Month_Name'] = df['Month'].dt.strftime('%b %Y')
+            df['Month_Name'] = df['Month'].dt.strftime('%b')
 
     return debit_df, weekly_df, shortage_df
 
