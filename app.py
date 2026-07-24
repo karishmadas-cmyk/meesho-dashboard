@@ -323,6 +323,40 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # --- TOP CONTRIBUTORS SECTION ---
+    st.markdown("##### TOP 5 MONTHLY CONTRIBUTORS")
+    if not filtered_debit.empty:
+        top_5_locs = (
+            filtered_debit.groupby('Location')['Total amount']
+            .sum()
+            .nlargest(5)
+            .index.tolist()
+        )
+        df_top5 = filtered_debit[filtered_debit['Location'].isin(top_5_locs)]
+        df_top5_grouped = (
+            df_top5.groupby(['Month', 'Month_Year', 'Location'])['Total amount']
+            .sum()
+            .reset_index()
+            .sort_values('Month')
+        )
+
+        fig_top5 = px.bar(
+            df_top5_grouped, 
+            x='Month_Year', 
+            y='Total amount', 
+            color='Location', 
+            barmode='stack'
+        )
+        fig_top5.update_layout(
+            margin=dict(l=0, r=0, t=20, b=0), 
+            height=300, 
+            xaxis_title=None, 
+            yaxis_title=None
+        )
+        st.plotly_chart(fig_top5, use_container_width=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
     # --- BOTTOM SECTION: CATEGORY & INSIGHTS (col_b1, col_b2) ---
     col_b1, col_b2 = st.columns(2)
 
