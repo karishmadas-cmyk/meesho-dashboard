@@ -41,7 +41,6 @@ st.markdown("""
         color: #212529 !important;
         word-wrap: break-word;
     }
-    /* Ensure all headers, bullet points, and text inside insight cards stay dark */
     .insight-card h5, 
     .insight-card b, 
     .insight-card li, 
@@ -103,14 +102,16 @@ def format_count(num):
         return f"{num / 1e3:.0f}K"
     return str(num)
 
-# Helper function to auto-format Horizontal Bar Charts into Descending order
+# Helper function to auto-format Horizontal Bar Charts into Descending order & force Legend
 def format_hbar_chart(fig, height=300):
     fig.update_yaxes(categoryorder="total ascending")
     fig.update_layout(
         margin=dict(l=0, r=0, t=20, b=0),
         height=height,
         xaxis_title=None,
-        yaxis_title=None
+        yaxis_title=None,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
     return fig
 
@@ -267,6 +268,7 @@ if page == "SHORTAGE VIEW":
             .head(5)
         )
         fig_loc = px.bar(loc_df, x='Shipment Count', y='Location', orientation='h', color_discrete_sequence=['#1f77b4'])
+        fig_loc.update_traces(name="Shipments")
         format_hbar_chart(fig_loc, height=300)
         st.plotly_chart(fig_loc, use_container_width=True)
 
@@ -274,9 +276,16 @@ if page == "SHORTAGE VIEW":
         st.markdown("##### Shortage Trend")
         trend_df = filtered_df.groupby(['Month'])['Total Amount'].sum().reset_index().sort_values('Month')
         fig_trend = px.line(trend_df, x='Month', y='Total Amount', markers=True, color_discrete_sequence=['#d9383a'])
+        fig_trend.update_traces(name="Shortage Loss Amount")
         fig_trend.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_trend.update_yaxes(dtick=2000000)
-        fig_trend.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, xaxis_title=None)
+        fig_trend.update_layout(
+            margin=dict(l=0, r=0, t=20, b=0), 
+            height=300, 
+            xaxis_title=None, 
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
         st.plotly_chart(fig_trend, use_container_width=True)
 
     # --- BOTTOM SECTION ---
@@ -292,6 +301,7 @@ if page == "SHORTAGE VIEW":
             .head(5)
         )
         fig_user = px.bar(user_df, x='Shipment Count', y='Assigned user', orientation='h', color_discrete_sequence=['#ff7f0e'])
+        fig_user.update_traces(name="Shipments")
         format_hbar_chart(fig_user, height=280)
         st.plotly_chart(fig_user, use_container_width=True)
 
@@ -404,20 +414,34 @@ elif page == "DEBIT VIEW":
         st.markdown("##### WEEKLY DEBIT- MONTHLY TREND")
         w_trend = filtered_weekly.groupby(['Month'])['Value'].sum().reset_index().sort_values('Month')
         fig_w = px.line(w_trend, x='Month', y='Value', markers=True)
-        fig_w.update_traces(line_color='#007bff', fill='tozeroy', fillcolor='rgba(0,123,255,0.1)')
+        fig_w.update_traces(line_color='#007bff', fill='tozeroy', fillcolor='rgba(0,123,255,0.1)', name="Weekly Debit Amount")
         fig_w.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_w.update_yaxes(dtick=2000000)
-        fig_w.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, yaxis_title=None, xaxis_title=None)
+        fig_w.update_layout(
+            margin=dict(l=0, r=0, t=20, b=0), 
+            height=300, 
+            yaxis_title=None, 
+            xaxis_title=None,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
         st.plotly_chart(fig_w, use_container_width=True)
 
     with col_l2:
         st.markdown("##### OVERALL DEBIT- MONTHLY TREND")
         o_trend = filtered_debit.groupby(['Month'])['Total amount'].sum().reset_index().sort_values('Month')
         fig_o = px.line(o_trend, x='Month', y='Total amount', markers=True)
-        fig_o.update_traces(line_color='#d9383a', fill='tozeroy', fillcolor='rgba(217,56,58,0.15)')
+        fig_o.update_traces(line_color='#d9383a', fill='tozeroy', fillcolor='rgba(217,56,58,0.15)', name="Overall Debit Amount")
         fig_o.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_o.update_yaxes(dtick=2000000)
-        fig_o.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, yaxis_title=None, xaxis_title=None)
+        fig_o.update_layout(
+            margin=dict(l=0, r=0, t=20, b=0), 
+            height=300, 
+            yaxis_title=None, 
+            xaxis_title=None,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+        )
         st.plotly_chart(fig_o, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -452,7 +476,9 @@ elif page == "DEBIT VIEW":
             margin=dict(l=0, r=0, t=20, b=0), 
             height=300, 
             xaxis_title=None, 
-            yaxis_title=None
+            yaxis_title=None,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         st.plotly_chart(fig_top5, use_container_width=True)
 
@@ -466,7 +492,12 @@ elif page == "DEBIT VIEW":
         loss_cat = filtered_debit.groupby('Loss Type')['Total amount'].sum().reset_index()
         fig_donut = px.pie(loss_cat, values='Total amount', names='Loss Type', hole=0.5,
                            color_discrete_map={'Shortage': '#d9383a', 'At facility': '#4CAF50', 'In-transit': '#FFC107'})
-        fig_donut.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300)
+        fig_donut.update_layout(
+            margin=dict(l=0, r=0, t=20, b=0), 
+            height=300,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+        )
         st.plotly_chart(fig_donut, use_container_width=True)
 
     with col_b2:
