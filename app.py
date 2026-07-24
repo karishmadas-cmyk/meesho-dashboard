@@ -187,8 +187,9 @@ if page == "SHORTAGE VIEW":
 
     with col_right:
         st.markdown("##### Shortage Trend")
-        trend_df = filtered_df.groupby(['Month', 'Month_Year'])['Total Amount'].sum().reset_index().sort_values('Month')
-        fig_trend = px.line(trend_df, x='Month_Year', y='Total Amount', markers=True, color_discrete_sequence=['#d9383a'])
+        trend_df = filtered_df.groupby(['Month'])['Total Amount'].sum().reset_index().sort_values('Month')
+        fig_trend = px.line(trend_df, x='Month', y='Total Amount', markers=True, color_discrete_sequence=['#d9383a'])
+        fig_trend.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_trend.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, xaxis_title=None)
         st.plotly_chart(fig_trend, use_container_width=True)
 
@@ -307,17 +308,19 @@ elif page == "DEBIT VIEW":
 
     with col_l1:
         st.markdown("##### WEEKLY DEBIT- MONTHLY TREND")
-        w_trend = filtered_weekly.groupby(['Month', 'Month_Year'])['Value'].sum().reset_index().sort_values('Month')
-        fig_w = px.line(w_trend, x='Month_Year', y='Value', markers=True)
+        w_trend = filtered_weekly.groupby(['Month'])['Value'].sum().reset_index().sort_values('Month')
+        fig_w = px.line(w_trend, x='Month', y='Value', markers=True)
         fig_w.update_traces(line_color='#007bff', fill='tozeroy', fillcolor='rgba(0,123,255,0.1)')
+        fig_w.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_w.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, yaxis_title=None, xaxis_title=None)
         st.plotly_chart(fig_w, use_container_width=True)
 
     with col_l2:
         st.markdown("##### OVERALL DEBIT- MONTHLY TREND")
-        o_trend = filtered_debit.groupby(['Month', 'Month_Year'])['Total amount'].sum().reset_index().sort_values('Month')
-        fig_o = px.line(o_trend, x='Month_Year', y='Total amount', markers=True)
+        o_trend = filtered_debit.groupby(['Month'])['Total amount'].sum().reset_index().sort_values('Month')
+        fig_o = px.line(o_trend, x='Month', y='Total amount', markers=True)
         fig_o.update_traces(line_color='#d9383a', fill='tozeroy', fillcolor='rgba(217,56,58,0.15)')
+        fig_o.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_o.update_layout(margin=dict(l=0, r=0, t=20, b=0), height=300, yaxis_title=None, xaxis_title=None)
         st.plotly_chart(fig_o, use_container_width=True)
 
@@ -334,7 +337,7 @@ elif page == "DEBIT VIEW":
         )
         df_top5 = filtered_debit[filtered_debit['Location'].isin(top_5_locs)]
         df_top5_grouped = (
-            df_top5.groupby(['Month', 'Month_Year', 'Location'])['Total amount']
+            df_top5.groupby(['Month', 'Location'])['Total amount']
             .sum()
             .reset_index()
             .sort_values('Month')
@@ -342,11 +345,12 @@ elif page == "DEBIT VIEW":
 
         fig_top5 = px.bar(
             df_top5_grouped, 
-            x='Month_Year', 
+            x='Month', 
             y='Total amount', 
             color='Location', 
             barmode='stack'
         )
+        fig_top5.update_xaxes(dtick="M2", tickformat="%b %Y")
         fig_top5.update_layout(
             margin=dict(l=0, r=0, t=20, b=0), 
             height=300, 
