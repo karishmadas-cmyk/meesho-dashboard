@@ -2,20 +2,25 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # PAGE CONFIGURATION
-# -----------------------------------------------------------------------------
+# =============================================================================
+
 st.set_page_config(
     page_title="Meesho Losses and Debit Tracking Dashboard",
     page_icon="📦",
     layout="wide"
 )
 
-# -----------------------------------------------------------------------------
+
+# =============================================================================
 # CUSTOM CSS
-# -----------------------------------------------------------------------------
-st.markdown("""
+# =============================================================================
+
+st.markdown(
+    """
     <style>
+
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #e0e0e0;
@@ -24,6 +29,7 @@ st.markdown("""
         text-align: center;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         color: #212529 !important;
+        min-height: 110px;
     }
 
     .kpi-value {
@@ -35,6 +41,7 @@ st.markdown("""
     .kpi-label {
         font-size: 13px;
         color: #555555 !important;
+        margin-top: 8px;
     }
 
     .insight-card {
@@ -54,27 +61,32 @@ st.markdown("""
     .insight-card div {
         color: #212529 !important;
     }
+
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # CONSTANTS
-# -----------------------------------------------------------------------------
+# =============================================================================
+
 ALL_MONTHS = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    "Jan", "Feb", "Mar", "Apr",
+    "May", "Jun", "Jul", "Aug",
+    "Sep", "Oct", "Nov", "Dec"
 ]
 
 
-# -----------------------------------------------------------------------------
-# DATA LOADING & PREPROCESSING
-# -----------------------------------------------------------------------------
+# =============================================================================
+# DATA LOADING
+# =============================================================================
+
 @st.cache_data
 def load_data():
 
-    # IMPORTANT:
-    # Keep the Excel file in the same folder as app.py
+    # Keep this Excel file in the same folder as app.py
     file_path = "Meesho dashboard.xlsx"
 
     debit_df = pd.read_excel(
@@ -95,115 +107,121 @@ def load_data():
     # -------------------------------------------------------------------------
     # CLEAN COLUMN NAMES
     # -------------------------------------------------------------------------
+
     debit_df.columns = debit_df.columns.str.strip()
     weekly_df.columns = weekly_df.columns.str.strip()
     shortage_df.columns = shortage_df.columns.str.strip()
 
-    # Specific column cleanup
+    # Fix specific shortage column name if required
     shortage_df.rename(
         columns={
-            'Assigned/ marked ': 'Assigned/ marked'
+            "Assigned/ marked ": "Assigned/ marked"
         },
         inplace=True
     )
 
-    # -------------------------------------------------------------------------
-    # PROCESS DEBIT DATA
-    # -------------------------------------------------------------------------
-    if 'Month' in debit_df.columns:
 
-        debit_df['Month'] = pd.to_datetime(
-            debit_df['Month'],
-            errors='coerce'
+    # -------------------------------------------------------------------------
+    # DEBIT DATA PROCESSING
+    # -------------------------------------------------------------------------
+
+    if "Month" in debit_df.columns:
+
+        debit_df["Month"] = pd.to_datetime(
+            debit_df["Month"],
+            errors="coerce"
         )
 
-        debit_df['Year'] = (
-            debit_df['Month']
+        debit_df["Year"] = (
+            debit_df["Month"]
             .dt.year
-            .astype('Int64')
+            .astype("Int64")
             .astype(str)
         )
 
-        debit_df['Month_Name'] = (
-            debit_df['Month']
-            .dt.strftime('%b')
+        debit_df["Month_Name"] = (
+            debit_df["Month"]
+            .dt.strftime("%b")
         )
 
-        debit_df['Month_Year'] = (
-            debit_df['Month']
-            .dt.strftime('%b %Y')
+        debit_df["Month_Year"] = (
+            debit_df["Month"]
+            .dt.strftime("%b %Y")
         )
 
         debit_df.sort_values(
-            by='Month',
+            by="Month",
             inplace=True
         )
 
 
     # -------------------------------------------------------------------------
-    # PROCESS WEEKLY DATA
+    # WEEKLY DATA PROCESSING
     # -------------------------------------------------------------------------
-    if 'Month' in weekly_df.columns:
 
-        weekly_df['Month'] = pd.to_datetime(
-            weekly_df['Month'],
-            errors='coerce'
+    if "Month" in weekly_df.columns:
+
+        weekly_df["Month"] = pd.to_datetime(
+            weekly_df["Month"],
+            errors="coerce"
         )
 
-        weekly_df['Year'] = (
-            weekly_df['Month']
+        weekly_df["Year"] = (
+            weekly_df["Month"]
             .dt.year
-            .astype('Int64')
+            .astype("Int64")
             .astype(str)
         )
 
-        weekly_df['Month_Name'] = (
-            weekly_df['Month']
-            .dt.strftime('%b')
+        weekly_df["Month_Name"] = (
+            weekly_df["Month"]
+            .dt.strftime("%b")
         )
 
-        weekly_df['Month_Year'] = (
-            weekly_df['Month']
-            .dt.strftime('%b %Y')
+        weekly_df["Month_Year"] = (
+            weekly_df["Month"]
+            .dt.strftime("%b %Y")
         )
 
         weekly_df.sort_values(
-            by='Month',
+            by="Month",
             inplace=True
         )
 
 
     # -------------------------------------------------------------------------
-    # CREATE WEEK FIELD FOR WEEKLY DATA
+    # CREATE WEEK COLUMN IF NOT AVAILABLE
     # -------------------------------------------------------------------------
-    # If Week already exists, keep it.
-    # Otherwise try to create it from an available date field.
-    if 'Week' not in weekly_df.columns:
+
+    if "Week" not in weekly_df.columns:
 
         possible_date_columns = [
-            'Date',
-            'Debit Date',
-            'Week Date',
-            'Created Date'
+            "Date",
+            "Debit Date",
+            "Week Date",
+            "Created Date"
         ]
 
         date_column_found = None
 
         for col in possible_date_columns:
+
             if col in weekly_df.columns:
+
                 date_column_found = col
                 break
 
-        if date_column_found:
+
+        if date_column_found is not None:
 
             weekly_df[date_column_found] = pd.to_datetime(
                 weekly_df[date_column_found],
-                errors='coerce'
+                errors="coerce"
             )
 
-            weekly_df['Week'] = (
+            weekly_df["Week"] = (
                 weekly_df[date_column_found]
-                .dt.to_period('W')
+                .dt.to_period("W")
                 .apply(
                     lambda x: x.start_time
                     if pd.notna(x)
@@ -211,57 +229,52 @@ def load_data():
                 )
             )
 
-        else:
-
-            # If no date column exists, create a fallback week label.
-            # This will use the existing Month field.
-            if 'Month' in weekly_df.columns:
-
-                weekly_df['Week'] = (
-                    weekly_df['Month']
-                    .dt.strftime('%b %Y')
-                )
-
 
     # -------------------------------------------------------------------------
-    # PROCESS SHORTAGE DATA
+    # SHORTAGE DATA PROCESSING
     # -------------------------------------------------------------------------
-    if 'Month' in shortage_df.columns:
 
-        shortage_df['Month'] = pd.to_datetime(
-            shortage_df['Month'],
-            errors='coerce'
+    if "Month" in shortage_df.columns:
+
+        shortage_df["Month"] = pd.to_datetime(
+            shortage_df["Month"],
+            errors="coerce"
         )
 
-        shortage_df['Year'] = (
-            shortage_df['Month']
+        shortage_df["Year"] = (
+            shortage_df["Month"]
             .dt.year
-            .astype('Int64')
+            .astype("Int64")
             .astype(str)
         )
 
-        shortage_df['Month_Name'] = (
-            shortage_df['Month']
-            .dt.strftime('%b')
+        shortage_df["Month_Name"] = (
+            shortage_df["Month"]
+            .dt.strftime("%b")
         )
 
-        shortage_df['Month_Year'] = (
-            shortage_df['Month']
-            .dt.strftime('%b %Y')
+        shortage_df["Month_Year"] = (
+            shortage_df["Month"]
+            .dt.strftime("%b %Y")
         )
 
         shortage_df.sort_values(
-            by='Month',
+            by="Month",
             inplace=True
         )
 
 
-    return debit_df, weekly_df, shortage_df
+    return (
+        debit_df,
+        weekly_df,
+        shortage_df
+    )
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # LOAD DATA
-# -----------------------------------------------------------------------------
+# =============================================================================
+
 try:
 
     debit_df, weekly_df, shortage_df = load_data()
@@ -280,24 +293,29 @@ except Exception as e:
     st.stop()
 
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 # HELPER FUNCTIONS
-# -----------------------------------------------------------------------------
+# =============================================================================
+
 def format_currency(num):
 
     if pd.isna(num):
         num = 0
 
     if num >= 1e7:
+
         return f"₹ {num / 1e7:.2f} Cr"
 
     elif num >= 1e5:
+
         return f"₹ {num / 1e5:.2f} L"
 
     elif num >= 1e3:
+
         return f"₹ {num / 1e3:.0f}K"
 
     else:
+
         return f"₹ {num:,.0f}"
 
 
@@ -307,54 +325,16 @@ def format_count(num):
         num = 0
 
     if num >= 1e3:
+
         return f"{num / 1e3:.0f}K"
 
     return f"{int(num):,}"
 
 
-# -----------------------------------------------------------------------------
-# HORIZONTAL BAR CHART FORMAT
-# -----------------------------------------------------------------------------
-def format_hbar_chart(
-    fig,
-    x_title="Shipment Count",
-    y_title="Location",
-    height=320
-):
-
-    fig.update_yaxes(
-        categoryorder="total ascending",
-        title=y_title
-    )
-
-    fig.update_xaxes(
-        title=x_title
-    )
-
-    fig.update_layout(
-        margin=dict(
-            l=80,
-            r=20,
-            t=35,
-            b=45
-        ),
-        height=height,
-        showlegend=True,
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        )
-    )
-
-    return fig
-
-
-# -----------------------------------------------------------------------------
+# =============================================================================
 # DYNAMIC MOM CALCULATION
-# -----------------------------------------------------------------------------
+# =============================================================================
+
 def calculate_debit_mom(
     df,
     sel_year,
@@ -368,20 +348,20 @@ def calculate_debit_mom(
     if sel_location != "All":
 
         d = d[
-            d['Location'] == sel_location
+            d["Location"] == sel_location
         ]
 
     if sel_loss_type != "All":
 
         d = d[
-            d['Loss Type'] == sel_loss_type
+            d["Loss Type"] == sel_loss_type
         ]
 
     monthly = (
-        d.groupby('Month')['Total amount']
+        d.groupby("Month")["Total amount"]
         .sum()
         .reset_index()
-        .sort_values('Month')
+        .sort_values("Month")
     )
 
     if monthly.empty:
@@ -389,31 +369,35 @@ def calculate_debit_mom(
         return "N/A", "#666666"
 
 
-    monthly['Year_str'] = (
-        monthly['Month']
+    monthly["Year_str"] = (
+        monthly["Month"]
         .dt.year
         .astype(str)
     )
 
-    monthly['Month_Name_str'] = (
-        monthly['Month']
-        .dt.strftime('%b')
+    monthly["Month_Name_str"] = (
+        monthly["Month"]
+        .dt.strftime("%b")
     )
 
+
+    # -------------------------------------------------------------------------
+    # SPECIFIC MONTH SELECTED
+    # -------------------------------------------------------------------------
 
     if sel_month != "All":
 
         if sel_year != "All":
 
             target_rows = monthly[
-                (monthly['Year_str'] == sel_year) &
-                (monthly['Month_Name_str'] == sel_month)
+                (monthly["Year_str"] == sel_year) &
+                (monthly["Month_Name_str"] == sel_month)
             ]
 
         else:
 
             target_rows = monthly[
-                monthly['Month_Name_str'] == sel_month
+                monthly["Month_Name_str"] == sel_month
             ]
 
 
@@ -426,7 +410,7 @@ def calculate_debit_mom(
 
         curr_val = monthly.loc[
             target_idx,
-            'Total amount'
+            "Total amount"
         ]
 
         pos = monthly.index.get_loc(
@@ -437,19 +421,23 @@ def calculate_debit_mom(
 
             prev_val = monthly.iloc[
                 pos - 1
-            ]['Total amount']
+            ]["Total amount"]
 
         else:
 
             return "N/A", "#666666"
 
 
+    # -------------------------------------------------------------------------
+    # ALL MONTHS
+    # -------------------------------------------------------------------------
+
     else:
 
         if sel_year != "All":
 
             monthly = monthly[
-                monthly['Year_str'] == sel_year
+                monthly["Year_str"] == sel_year
             ]
 
         if len(monthly) < 2:
@@ -458,12 +446,16 @@ def calculate_debit_mom(
 
         curr_val = monthly.iloc[
             -1
-        ]['Total amount']
+        ]["Total amount"]
 
         prev_val = monthly.iloc[
             -2
-        ]['Total amount']
+        ]["Total amount"]
 
+
+    # -------------------------------------------------------------------------
+    # CALCULATE %
+    # -------------------------------------------------------------------------
 
     if prev_val == 0:
 
@@ -498,9 +490,10 @@ def calculate_debit_mom(
         )
 
 
-# -----------------------------------------------------------------------------
-# NAVIGATION SIDEBAR
-# -----------------------------------------------------------------------------
+# =============================================================================
+# PAGE TITLE & NAVIGATION
+# =============================================================================
+
 st.title(
     "📦 Meesho Losses and Debit Tracking Dashboard"
 )
@@ -517,6 +510,7 @@ page = st.sidebar.radio(
 # =============================================================================
 # PAGE 1: SHORTAGE VIEW
 # =============================================================================
+
 if page == "SHORTAGE VIEW":
 
     st.subheader(
@@ -527,16 +521,18 @@ if page == "SHORTAGE VIEW":
     # -------------------------------------------------------------------------
     # FILTERS
     # -------------------------------------------------------------------------
+
     f1, f2, f3, f4 = st.columns(4)
 
 
-    years = [
-        "All"
-    ] + sorted(
-        list(
-            shortage_df['Year']
-            .dropna()
-            .unique()
+    years = (
+        ["All"]
+        + sorted(
+            list(
+                shortage_df["Year"]
+                .dropna()
+                .unique()
+            )
         )
     )
 
@@ -548,9 +544,10 @@ if page == "SHORTAGE VIEW":
     )
 
 
-    months = [
-        "All"
-    ] + ALL_MONTHS
+    months = (
+        ["All"]
+        + ALL_MONTHS
+    )
 
 
     sel_month = f2.selectbox(
@@ -560,14 +557,15 @@ if page == "SHORTAGE VIEW":
     )
 
 
-    assigned_opts = [
-        "All"
-    ] + list(
-        shortage_df[
-            'Assigned/ marked'
-        ]
-        .dropna()
-        .unique()
+    assigned_opts = (
+        ["All"]
+        + list(
+            shortage_df[
+                "Assigned/ marked"
+            ]
+            .dropna()
+            .unique()
+        )
     )
 
 
@@ -578,14 +576,15 @@ if page == "SHORTAGE VIEW":
     )
 
 
-    locations = [
-        "All"
-    ] + list(
-        shortage_df[
-            'Location'
-        ]
-        .dropna()
-        .unique()
+    locations = (
+        ["All"]
+        + list(
+            shortage_df[
+                "Location"
+            ]
+            .dropna()
+            .unique()
+        )
     )
 
 
@@ -599,27 +598,28 @@ if page == "SHORTAGE VIEW":
     # -------------------------------------------------------------------------
     # FILTER DATA
     # -------------------------------------------------------------------------
+
     filtered_df = shortage_df.copy()
 
 
     if sel_year != "All":
 
         filtered_df = filtered_df[
-            filtered_df['Year'] == sel_year
+            filtered_df["Year"] == sel_year
         ]
 
 
     if sel_month != "All":
 
         filtered_df = filtered_df[
-            filtered_df['Month_Name'] == sel_month
+            filtered_df["Month_Name"] == sel_month
         ]
 
 
     if sel_assigned != "All":
 
         filtered_df = filtered_df[
-            filtered_df['Assigned/ marked']
+            filtered_df["Assigned/ marked"]
             == sel_assigned
         ]
 
@@ -627,28 +627,32 @@ if page == "SHORTAGE VIEW":
     if sel_location != "All":
 
         filtered_df = filtered_df[
-            filtered_df['Location']
+            filtered_df["Location"]
             == sel_location
         ]
 
 
     # -------------------------------------------------------------------------
-    # KPI CARDS & INSIGHTS
+    # KPI CALCULATIONS
     # -------------------------------------------------------------------------
-    c1, c2, c3 = st.columns(
-        [1, 1, 1.5]
-    )
-
 
     total_short_shipments = len(
         filtered_df
     )
 
-
     total_shortage_amount = (
         filtered_df[
-            'Total Amount'
+            "Total Amount"
         ].sum()
+    )
+
+
+    # -------------------------------------------------------------------------
+    # KPI CARDS
+    # -------------------------------------------------------------------------
+
+    c1, c2, c3 = st.columns(
+        [1, 1, 1.5]
     )
 
 
@@ -656,16 +660,15 @@ if page == "SHORTAGE VIEW":
 
         st.markdown(
             f"""
-            <div class="kpi-card">
-                <div class="kpi-value">
-                    {format_count(total_short_shipments)}
-                </div>
-
-                <div class="kpi-label">
-                    Short Shipments
-                </div>
-            </div>
-            """,
+<div class="kpi-card">
+    <div class="kpi-value">
+        {format_count(total_short_shipments)}
+    </div>
+    <div class="kpi-label">
+        Short Shipments
+    </div>
+</div>
+""",
             unsafe_allow_html=True
         )
 
@@ -674,23 +677,26 @@ if page == "SHORTAGE VIEW":
 
         st.markdown(
             f"""
-            <div class="kpi-card">
-                <div class="kpi-value">
-                    {format_currency(total_shortage_amount)}
-                </div>
-
-                <div class="kpi-label">
-                    Shortage Amount
-                </div>
-            </div>
-            """,
+<div class="kpi-card">
+    <div class="kpi-value">
+        {format_currency(total_shortage_amount)}
+    </div>
+    <div class="kpi-label">
+        Shortage Amount
+    </div>
+</div>
+""",
             unsafe_allow_html=True
         )
 
 
+    # -------------------------------------------------------------------------
+    # SHORTAGE INSIGHTS
+    # -------------------------------------------------------------------------
+
     top_cat = (
         filtered_df[
-            'Assigned/ marked'
+            "Assigned/ marked"
         ].mode()[0]
         if not filtered_df.empty
         else "N/A"
@@ -699,7 +705,7 @@ if page == "SHORTAGE VIEW":
 
     top_loc = (
         filtered_df[
-            'Location'
+            "Location"
         ].mode()[0]
         if not filtered_df.empty
         else "N/A"
@@ -708,7 +714,7 @@ if page == "SHORTAGE VIEW":
 
     top_reason = (
         filtered_df[
-            'Shorage type'
+            "Shorage type"
         ].mode()[0]
         if not filtered_df.empty
         else "N/A"
@@ -718,9 +724,9 @@ if page == "SHORTAGE VIEW":
     peak_month = (
         filtered_df
         .groupby(
-            'Month_Year'
+            "Month_Year"
         )[
-            'Total Amount'
+            "Total Amount"
         ]
         .sum()
         .idxmax()
@@ -731,53 +737,52 @@ if page == "SHORTAGE VIEW":
 
     with c3:
 
+        shortage_insights_html = f"""
+<div class="insight-card">
+
+    <h5 style="margin-top:0px; margin-bottom:8px;">
+        Shortage Insights
+    </h5>
+
+    <ul style="margin-top:0px; margin-bottom:0px; padding-left:20px;">
+
+        <li>
+            <b>Highest category:</b>
+            {top_cat}
+        </li>
+
+        <li>
+            <b>Total shortage cases:</b>
+            {total_short_shipments:,}
+        </li>
+
+        <li>
+            <b>Total shortage loss value:</b>
+            ₹{total_shortage_amount:,.0f}
+        </li>
+
+        <li>
+            <b>Highest shortage location:</b>
+            {top_loc}
+        </li>
+
+        <li>
+            <b>Major shortage reason:</b>
+            {top_reason}
+        </li>
+
+        <li>
+            <b>Shortage peak month:</b>
+            {peak_month}
+        </li>
+
+    </ul>
+
+</div>
+"""
+
         st.markdown(
-            f"""
-            <div class="insight-card">
-
-                <h5 style="margin-top: 0px;
-                           margin-bottom: 8px;">
-                    Shortage Insights
-                </h5>
-
-                <ul style="margin-top: 0px;
-                           margin-bottom: 0px;
-                           padding-left: 20px;">
-
-                    <li>
-                        <b>Highest category:</b>
-                        {top_cat}
-                    </li>
-
-                    <li>
-                        <b>Total shortage cases:</b>
-                        {total_short_shipments:,}
-                    </li>
-
-                    <li>
-                        <b>Total shortage loss value:</b>
-                        ₹{total_shortage_amount:,.0f}
-                    </li>
-
-                    <li>
-                        <b>Highest shortage location:</b>
-                        {top_loc}
-                    </li>
-
-                    <li>
-                        <b>Major shortage reason:</b>
-                        {top_reason}
-                    </li>
-
-                    <li>
-                        <b>Shortage peak month:</b>
-                        {peak_month}
-                    </li>
-
-                </ul>
-
-            </div>
-            """,
+            shortage_insights_html,
             unsafe_allow_html=True
         )
 
@@ -789,10 +794,15 @@ if page == "SHORTAGE VIEW":
 
 
     # -------------------------------------------------------------------------
-    # CHARTS
+    # SHORTAGE CHARTS
     # -------------------------------------------------------------------------
+
     col_left, col_right = st.columns(2)
 
+
+    # -------------------------------------------------------------------------
+    # TOP 5 SHORTAGE LOCATIONS
+    # -------------------------------------------------------------------------
 
     with col_left:
 
@@ -803,13 +813,13 @@ if page == "SHORTAGE VIEW":
 
         loc_df = (
             filtered_df
-            .groupby('Location')
+            .groupby("Location")
             .size()
             .reset_index(
-                name='Shipment Count'
+                name="Shipment Count"
             )
             .sort_values(
-                by='Shipment Count',
+                by="Shipment Count",
                 ascending=False
             )
             .head(5)
@@ -818,25 +828,17 @@ if page == "SHORTAGE VIEW":
 
         fig_loc = px.bar(
             loc_df,
-            x='Shipment Count',
-            y='Location',
-            orientation='h',
+            x="Shipment Count",
+            y="Location",
+            orientation="h",
             color_discrete_sequence=[
-                '#1f77b4'
+                "#1f77b4"
             ]
         )
 
 
-        fig_loc.update_traces(
-            name="Shipments"
-        )
-
-
-        format_hbar_chart(
-            fig_loc,
-            x_title="Shipment Count",
-            y_title="Location",
-            height=320
+        fig_loc.update_yaxes(
+            categoryorder="total ascending"
         )
 
 
@@ -845,6 +847,10 @@ if page == "SHORTAGE VIEW":
             use_container_width=True
         )
 
+
+    # -------------------------------------------------------------------------
+    # SHORTAGE TREND
+    # -------------------------------------------------------------------------
 
     with col_right:
 
@@ -855,28 +861,25 @@ if page == "SHORTAGE VIEW":
 
         trend_df = (
             filtered_df
-            .groupby(['Month'])[
-                'Total Amount'
+            .groupby(
+                "Month"
+            )[
+                "Total Amount"
             ]
             .sum()
             .reset_index()
-            .sort_values('Month')
+            .sort_values("Month")
         )
 
 
         fig_trend = px.line(
             trend_df,
-            x='Month',
-            y='Total Amount',
+            x="Month",
+            y="Total Amount",
             markers=True,
             color_discrete_sequence=[
-                '#d9383a'
+                "#d9383a"
             ]
-        )
-
-
-        fig_trend.update_traces(
-            name="Shortage Loss Amount"
         )
 
 
@@ -888,27 +891,7 @@ if page == "SHORTAGE VIEW":
 
 
         fig_trend.update_yaxes(
-            dtick=2000000,
             title="Loss Amount (₹)"
-        )
-
-
-        fig_trend.update_layout(
-            margin=dict(
-                l=70,
-                r=20,
-                t=35,
-                b=45
-            ),
-            height=320,
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
         )
 
 
@@ -921,10 +904,15 @@ if page == "SHORTAGE VIEW":
     # -------------------------------------------------------------------------
     # BOTTOM SECTION
     # -------------------------------------------------------------------------
+
     col_bottom_left, col_bottom_right = st.columns(
         [1, 1.2]
     )
 
+
+    # -------------------------------------------------------------------------
+    # TOP USERS
+    # -------------------------------------------------------------------------
 
     with col_bottom_left:
 
@@ -935,13 +923,15 @@ if page == "SHORTAGE VIEW":
 
         user_df = (
             filtered_df
-            .groupby('Assigned user')
+            .groupby(
+                "Assigned user"
+            )
             .size()
             .reset_index(
-                name='Shipment Count'
+                name="Shipment Count"
             )
             .sort_values(
-                by='Shipment Count',
+                by="Shipment Count",
                 ascending=False
             )
             .head(5)
@@ -950,25 +940,17 @@ if page == "SHORTAGE VIEW":
 
         fig_user = px.bar(
             user_df,
-            x='Shipment Count',
-            y='Assigned user',
-            orientation='h',
+            x="Shipment Count",
+            y="Assigned user",
+            orientation="h",
             color_discrete_sequence=[
-                '#ff7f0e'
+                "#ff7f0e"
             ]
         )
 
 
-        fig_user.update_traces(
-            name="Shipments"
-        )
-
-
-        format_hbar_chart(
-            fig_user,
-            x_title="Shipment Count",
-            y_title="Assigned User",
-            height=300
+        fig_user.update_yaxes(
+            categoryorder="total ascending"
         )
 
 
@@ -977,6 +959,10 @@ if page == "SHORTAGE VIEW":
             use_container_width=True
         )
 
+
+    # -------------------------------------------------------------------------
+    # DETAIL TABLE
+    # -------------------------------------------------------------------------
 
     with col_bottom_right:
 
@@ -989,23 +975,23 @@ if page == "SHORTAGE VIEW":
             filtered_df
             .groupby(
                 [
-                    'Assigned user',
-                    'Location'
+                    "Assigned user",
+                    "Location"
                 ]
             )
             .agg(
                 Count_of_AWB=(
-                    'AWB',
-                    'count'
+                    "AWB",
+                    "count"
                 ),
                 Sum_of_Total_Amount=(
-                    'Total Amount',
-                    'sum'
+                    "Total Amount",
+                    "sum"
                 )
             )
             .reset_index()
             .sort_values(
-                by='Sum_of_Total_Amount',
+                by="Sum_of_Total_Amount",
                 ascending=False
             )
         )
@@ -1038,6 +1024,7 @@ if page == "SHORTAGE VIEW":
 # =============================================================================
 # PAGE 2: DEBIT VIEW
 # =============================================================================
+
 elif page == "DEBIT VIEW":
 
     st.subheader(
@@ -1048,18 +1035,20 @@ elif page == "DEBIT VIEW":
     # -------------------------------------------------------------------------
     # FILTERS
     # -------------------------------------------------------------------------
+
     f1, f2, f3, f4 = st.columns(4)
 
 
-    years = [
-        "All"
-    ] + sorted(
-        list(
-            debit_df[
-                'Year'
-            ]
-            .dropna()
-            .unique()
+    years = (
+        ["All"]
+        + sorted(
+            list(
+                debit_df[
+                    "Year"
+                ]
+                .dropna()
+                .unique()
+            )
         )
     )
 
@@ -1071,9 +1060,10 @@ elif page == "DEBIT VIEW":
     )
 
 
-    months = [
-        "All"
-    ] + ALL_MONTHS
+    months = (
+        ["All"]
+        + ALL_MONTHS
+    )
 
 
     sel_month = f2.selectbox(
@@ -1083,14 +1073,15 @@ elif page == "DEBIT VIEW":
     )
 
 
-    locations = [
-        "All"
-    ] + list(
-        debit_df[
-            'Location'
-        ]
-        .dropna()
-        .unique()
+    locations = (
+        ["All"]
+        + list(
+            debit_df[
+                "Location"
+            ]
+            .dropna()
+            .unique()
+        )
     )
 
 
@@ -1101,14 +1092,15 @@ elif page == "DEBIT VIEW":
     )
 
 
-    loss_types = [
-        "All"
-    ] + list(
-        debit_df[
-            'Loss Type'
-        ]
-        .dropna()
-        .unique()
+    loss_types = (
+        ["All"]
+        + list(
+            debit_df[
+                "Loss Type"
+            ]
+            .dropna()
+            .unique()
+        )
     )
 
 
@@ -1122,6 +1114,7 @@ elif page == "DEBIT VIEW":
     # -------------------------------------------------------------------------
     # FILTER DATA
     # -------------------------------------------------------------------------
+
     filtered_debit = debit_df.copy()
 
     filtered_weekly = weekly_df.copy()
@@ -1130,12 +1123,12 @@ elif page == "DEBIT VIEW":
     if sel_year != "All":
 
         filtered_debit = filtered_debit[
-            filtered_debit['Year']
+            filtered_debit["Year"]
             == sel_year
         ]
 
         filtered_weekly = filtered_weekly[
-            filtered_weekly['Year']
+            filtered_weekly["Year"]
             == sel_year
         ]
 
@@ -1143,12 +1136,12 @@ elif page == "DEBIT VIEW":
     if sel_month != "All":
 
         filtered_debit = filtered_debit[
-            filtered_debit['Month_Name']
+            filtered_debit["Month_Name"]
             == sel_month
         ]
 
         filtered_weekly = filtered_weekly[
-            filtered_weekly['Month_Name']
+            filtered_weekly["Month_Name"]
             == sel_month
         ]
 
@@ -1156,42 +1149,35 @@ elif page == "DEBIT VIEW":
     if sel_location != "All":
 
         filtered_debit = filtered_debit[
-            filtered_debit['Location']
+            filtered_debit["Location"]
             == sel_location
         ]
 
         filtered_weekly = filtered_weekly[
-            filtered_weekly['Location']
+            filtered_weekly["Location"]
             == sel_location
-        ]
-
-
-    # -------------------------------------------------------------------------
-    # LOSS TYPE FILTER FOR WEEKLY DATA
-    # -------------------------------------------------------------------------
-    # Apply Loss Type filter only if Weekly file also contains Loss Type.
-    if (
-        sel_loss_type != "All"
-        and 'Loss Type' in filtered_weekly.columns
-    ):
-
-        filtered_weekly = filtered_weekly[
-            filtered_weekly['Loss Type']
-            == sel_loss_type
         ]
 
 
     if sel_loss_type != "All":
 
         filtered_debit = filtered_debit[
-            filtered_debit['Loss Type']
+            filtered_debit["Loss Type"]
             == sel_loss_type
         ]
+
+        if "Loss Type" in filtered_weekly.columns:
+
+            filtered_weekly = filtered_weekly[
+                filtered_weekly["Loss Type"]
+                == sel_loss_type
+            ]
 
 
     # -------------------------------------------------------------------------
     # KPI CALCULATIONS
     # -------------------------------------------------------------------------
+
     total_shipment_count = len(
         filtered_debit
     )
@@ -1199,14 +1185,14 @@ elif page == "DEBIT VIEW":
 
     overall_debit_amount = (
         filtered_debit[
-            'Total amount'
+            "Total amount"
         ].sum()
     )
 
 
     weekly_debit_amount = (
         filtered_weekly[
-            'Value'
+            "Value"
         ].sum()
     )
 
@@ -1214,28 +1200,27 @@ elif page == "DEBIT VIEW":
     # -------------------------------------------------------------------------
     # WEEKLY DEBIT AWB COUNT
     # -------------------------------------------------------------------------
-    if (
-        'AWB' in filtered_weekly.columns
-    ):
+
+    if "AWB" in filtered_weekly.columns:
 
         weekly_debit_awb_count = (
             filtered_weekly[
-                'AWB'
+                "AWB"
             ]
             .nunique()
         )
 
     else:
 
-        # Fallback if AWB column is not available
         weekly_debit_awb_count = len(
             filtered_weekly
         )
 
 
     # -------------------------------------------------------------------------
-    # DYNAMIC MOM
+    # MOM
     # -------------------------------------------------------------------------
+
     mom_value, mom_color = calculate_debit_mom(
         debit_df,
         sel_year,
@@ -1245,116 +1230,134 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # KPI CARDS
+    # =========================================================================
+
+    c1, c2, c3, c4, c5 = st.columns(
+        5
+    )
+
+
     # -------------------------------------------------------------------------
-    c1, c2, c3, c4, c5 = st.columns(5)
-
-
     # KPI 1
+    # -------------------------------------------------------------------------
+
     with c1:
 
         st.markdown(
             f"""
-            <div class="kpi-card">
+<div class="kpi-card">
 
-                <div class="kpi-value">
-                    {format_count(total_shipment_count)}
-                </div>
+    <div class="kpi-value">
+        {format_count(total_shipment_count)}
+    </div>
 
-                <div class="kpi-label">
-                    Shipment count (Overall Debit)
-                </div>
+    <div class="kpi-label">
+        Shipment count (Overall Debit)
+    </div>
 
-            </div>
-            """,
+</div>
+""",
             unsafe_allow_html=True
         )
 
 
+    # -------------------------------------------------------------------------
     # KPI 2
+    # -------------------------------------------------------------------------
+
     with c2:
 
         st.markdown(
             f"""
-            <div class="kpi-card">
+<div class="kpi-card">
 
-                <div class="kpi-value">
-                    {format_currency(overall_debit_amount)}
-                </div>
+    <div class="kpi-value">
+        {format_currency(overall_debit_amount)}
+    </div>
 
-                <div class="kpi-label">
-                    Overall Debit
-                </div>
+    <div class="kpi-label">
+        Overall Debit
+    </div>
 
-            </div>
-            """,
+</div>
+""",
             unsafe_allow_html=True
         )
 
 
+    # -------------------------------------------------------------------------
     # KPI 3
+    # -------------------------------------------------------------------------
+
     with c3:
 
         st.markdown(
             f"""
-            <div class="kpi-card">
+<div class="kpi-card">
 
-                <div class="kpi-value">
-                    {format_currency(weekly_debit_amount)}
-                </div>
+    <div class="kpi-value">
+        {format_currency(weekly_debit_amount)}
+    </div>
 
-                <div class="kpi-label">
-                    Weekly Debit
-                </div>
+    <div class="kpi-label">
+        Weekly Debit
+    </div>
 
-            </div>
-            """,
+</div>
+""",
             unsafe_allow_html=True
         )
 
 
+    # -------------------------------------------------------------------------
     # KPI 4 - NEW
+    # -------------------------------------------------------------------------
+
     with c4:
 
         st.markdown(
             f"""
-            <div class="kpi-card">
+<div class="kpi-card">
 
-                <div class="kpi-value">
-                    {format_count(weekly_debit_awb_count)}
-                </div>
+    <div class="kpi-value">
+        {format_count(weekly_debit_awb_count)}
+    </div>
 
-                <div class="kpi-label">
-                    Weekly Debit AWB Count
-                </div>
+    <div class="kpi-label">
+        Weekly Debit AWB Count
+    </div>
 
-            </div>
-            """,
+</div>
+""",
             unsafe_allow_html=True
         )
 
 
-    # KPI 5
+    # -------------------------------------------------------------------------
+    # KPI 5 - MOM
+    # -------------------------------------------------------------------------
+
     with c5:
 
         st.markdown(
             f"""
-            <div class="kpi-card">
+<div class="kpi-card">
 
-                <div
-                    class="kpi-value"
-                    style="color: {mom_color} !important;"
-                >
-                    {mom_value}
-                </div>
+    <div
+        class="kpi-value"
+        style="color:{mom_color} !important;"
+    >
+        {mom_value}
+    </div>
 
-                <div class="kpi-label">
-                    Debit MoM (vs last month)
-                </div>
+    <div class="kpi-label">
+        Debit MoM (vs last month)
+    </div>
 
-            </div>
-            """,
+</div>
+""",
             unsafe_allow_html=True
         )
 
@@ -1365,15 +1368,17 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # -------------------------------------------------------------------------
-    # MIDDLE SECTION: TRENDS
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # TREND SECTION
+    # =========================================================================
+
     col_l1, col_l2 = st.columns(2)
 
 
     # -------------------------------------------------------------------------
     # WEEKLY DEBIT MONTHLY TREND
     # -------------------------------------------------------------------------
+
     with col_l1:
 
         st.markdown(
@@ -1383,27 +1388,29 @@ elif page == "DEBIT VIEW":
 
         w_trend = (
             filtered_weekly
-            .groupby(['Month'])[
-                'Value'
+            .groupby(
+                "Month"
+            )[
+                "Value"
             ]
             .sum()
             .reset_index()
-            .sort_values('Month')
+            .sort_values("Month")
         )
 
 
         fig_w = px.line(
             w_trend,
-            x='Month',
-            y='Value',
+            x="Month",
+            y="Value",
             markers=True
         )
 
 
         fig_w.update_traces(
-            line_color='#007bff',
-            fill='tozeroy',
-            fillcolor='rgba(0,123,255,0.1)',
+            line_color="#007bff",
+            fill="tozeroy",
+            fillcolor="rgba(0,123,255,0.1)",
             name="Weekly Debit Amount"
         )
 
@@ -1416,27 +1423,7 @@ elif page == "DEBIT VIEW":
 
 
         fig_w.update_yaxes(
-            dtick=2000000,
             title="Debit Amount (₹)"
-        )
-
-
-        fig_w.update_layout(
-            margin=dict(
-                l=70,
-                r=20,
-                t=35,
-                b=45
-            ),
-            height=320,
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
         )
 
 
@@ -1449,6 +1436,7 @@ elif page == "DEBIT VIEW":
     # -------------------------------------------------------------------------
     # OVERALL DEBIT MONTHLY TREND
     # -------------------------------------------------------------------------
+
     with col_l2:
 
         st.markdown(
@@ -1458,27 +1446,29 @@ elif page == "DEBIT VIEW":
 
         o_trend = (
             filtered_debit
-            .groupby(['Month'])[
-                'Total amount'
+            .groupby(
+                "Month"
+            )[
+                "Total amount"
             ]
             .sum()
             .reset_index()
-            .sort_values('Month')
+            .sort_values("Month")
         )
 
 
         fig_o = px.line(
             o_trend,
-            x='Month',
-            y='Total amount',
+            x="Month",
+            y="Total amount",
             markers=True
         )
 
 
         fig_o.update_traces(
-            line_color='#d9383a',
-            fill='tozeroy',
-            fillcolor='rgba(217,56,58,0.15)',
+            line_color="#d9383a",
+            fill="tozeroy",
+            fillcolor="rgba(217,56,58,0.15)",
             name="Overall Debit Amount"
         )
 
@@ -1491,27 +1481,7 @@ elif page == "DEBIT VIEW":
 
 
         fig_o.update_yaxes(
-            dtick=2000000,
             title="Debit Amount (₹)"
-        )
-
-
-        fig_o.update_layout(
-            margin=dict(
-                l=70,
-                r=20,
-                t=35,
-                b=45
-            ),
-            height=320,
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            )
         )
 
 
@@ -1527,9 +1497,10 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # TOP 5 MONTHLY CONTRIBUTORS
-    # -------------------------------------------------------------------------
+    # =========================================================================
+
     st.markdown(
         "##### TOP 5 MONTHLY CONTRIBUTORS"
     )
@@ -1539,8 +1510,10 @@ elif page == "DEBIT VIEW":
 
         top_5_locs = (
             filtered_debit
-            .groupby('Location')[
-                'Total amount'
+            .groupby(
+                "Location"
+            )[
+                "Total amount"
             ]
             .sum()
             .nlargest(5)
@@ -1551,8 +1524,10 @@ elif page == "DEBIT VIEW":
 
         df_top5 = filtered_debit[
             filtered_debit[
-                'Location'
-            ].isin(top_5_locs)
+                "Location"
+            ].isin(
+                top_5_locs
+            )
         ]
 
 
@@ -1560,24 +1535,26 @@ elif page == "DEBIT VIEW":
             df_top5
             .groupby(
                 [
-                    'Month',
-                    'Location'
+                    "Month",
+                    "Location"
                 ]
             )[
-                'Total amount'
+                "Total amount"
             ]
             .sum()
             .reset_index()
-            .sort_values('Month')
+            .sort_values(
+                "Month"
+            )
         )
 
 
         fig_top5 = px.bar(
             df_top5_grouped,
-            x='Month',
-            y='Total amount',
-            color='Location',
-            barmode='stack'
+            x="Month",
+            y="Total amount",
+            color="Location",
+            barmode="stack"
         )
 
 
@@ -1589,7 +1566,6 @@ elif page == "DEBIT VIEW":
 
 
         fig_top5.update_yaxes(
-            dtick=2000000,
             title="Total Amount (₹)"
         )
 
@@ -1619,9 +1595,17 @@ elif page == "DEBIT VIEW":
         )
 
 
-    # -------------------------------------------------------------------------
-    # NEW: TOP 5 WEEKLY CONTRIBUTORS
-    # -------------------------------------------------------------------------
+    else:
+
+        st.info(
+            "No monthly debit data available."
+        )
+
+
+    # =========================================================================
+    # TOP 5 WEEKLY CONTRIBUTORS - NEW
+    # =========================================================================
+
     st.markdown(
         "<br>",
         unsafe_allow_html=True
@@ -1636,12 +1620,15 @@ elif page == "DEBIT VIEW":
     if not filtered_weekly.empty:
 
         # ---------------------------------------------------------------------
-        # Find Top 5 Locations Based on Total Weekly Debit
+        # TOP 5 LOCATIONS BY TOTAL WEEKLY DEBIT
         # ---------------------------------------------------------------------
+
         top_5_weekly_locs = (
             filtered_weekly
-            .groupby('Location')[
-                'Value'
+            .groupby(
+                "Location"
+            )[
+                "Value"
             ]
             .sum()
             .nlargest(5)
@@ -1650,51 +1637,57 @@ elif page == "DEBIT VIEW":
         )
 
 
-        # ---------------------------------------------------------------------
-        # Filter Top 5 Locations
-        # ---------------------------------------------------------------------
         df_weekly_top5 = filtered_weekly[
             filtered_weekly[
-                'Location'
-            ].isin(top_5_weekly_locs)
+                "Location"
+            ].isin(
+                top_5_weekly_locs
+            )
         ].copy()
 
 
         # ---------------------------------------------------------------------
-        # Group by Week and Location
+        # WEEKLY GROUPING
         # ---------------------------------------------------------------------
-        if 'Week' in df_weekly_top5.columns:
+
+        if "Week" in df_weekly_top5.columns:
 
             df_weekly_top5_grouped = (
                 df_weekly_top5
                 .groupby(
                     [
-                        'Week',
-                        'Location'
+                        "Week",
+                        "Location"
                     ]
                 )[
-                    'Value'
+                    "Value"
                 ]
                 .sum()
                 .reset_index()
             )
 
 
-            df_weekly_top5_grouped = (
-                df_weekly_top5_grouped
-                .sort_values('Week')
+            # Convert Week to string for clean labels
+            df_weekly_top5_grouped[
+                "Week"
+            ] = (
+                df_weekly_top5_grouped[
+                    "Week"
+                ]
+                .astype(str)
             )
 
 
-            # -------------------------------------------------------------
-            # Create Weekly Stacked Bar Chart
-            # -------------------------------------------------------------
+            # -----------------------------------------------------------------
+            # WEEKLY STACKED BAR CHART
+            # -----------------------------------------------------------------
+
             fig_weekly_top5 = px.bar(
                 df_weekly_top5_grouped,
-                x='Week',
-                y='Value',
-                color='Location',
-                barmode='stack'
+                x="Week",
+                y="Value",
+                color="Location",
+                barmode="stack"
             )
 
 
@@ -1735,9 +1728,9 @@ elif page == "DEBIT VIEW":
 
         else:
 
-            st.info(
-                "Weekly contributor chart cannot be displayed "
-                "because no Week field is available in the Weekly file."
+            st.warning(
+                "The Weekly file does not contain a 'Week' column. "
+                "Please add a Week column or provide a weekly date column."
             )
 
 
@@ -1754,15 +1747,17 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # -------------------------------------------------------------------------
-    # BOTTOM SECTION: CATEGORY & INSIGHTS
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # BOTTOM SECTION
+    # =========================================================================
+
     col_b1, col_b2 = st.columns(2)
 
 
     # -------------------------------------------------------------------------
     # LOSS CATEGORY OVERVIEW
     # -------------------------------------------------------------------------
+
     with col_b1:
 
         st.markdown(
@@ -1772,122 +1767,166 @@ elif page == "DEBIT VIEW":
 
         loss_cat = (
             filtered_debit
-            .groupby('Loss Type')[
-                'Total amount'
+            .groupby(
+                "Loss Type"
+            )[
+                "Total amount"
             ]
             .sum()
             .reset_index()
         )
 
 
-        fig_donut = px.pie(
-            loss_cat,
-            values='Total amount',
-            names='Loss Type',
-            hole=0.5,
-            color_discrete_map={
-                'Shortage': '#d9383a',
-                'At facility': '#4CAF50',
-                'In-transit': '#FFC107'
-            }
-        )
+        if not loss_cat.empty:
 
-
-        fig_donut.update_layout(
-            margin=dict(
-                l=20,
-                r=20,
-                t=30,
-                b=30
-            ),
-            height=320,
-            showlegend=True,
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.1,
-                xanchor="center",
-                x=0.5
+            fig_donut = px.pie(
+                loss_cat,
+                values="Total amount",
+                names="Loss Type",
+                hole=0.5,
+                color_discrete_map={
+                    "Shortage": "#d9383a",
+                    "At facility": "#4CAF50",
+                    "In-transit": "#FFC107"
+                }
             )
-        )
 
 
-        st.plotly_chart(
-            fig_donut,
-            use_container_width=True
-        )
+            fig_donut.update_layout(
+                margin=dict(
+                    l=20,
+                    r=20,
+                    t=30,
+                    b=30
+                ),
+                height=320,
+                showlegend=True,
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.1,
+                    xanchor="center",
+                    x=0.5
+                )
+            )
+
+
+            st.plotly_chart(
+                fig_donut,
+                use_container_width=True
+            )
+
+
+        else:
+
+            st.info(
+                "No loss category data available."
+            )
 
 
     # -------------------------------------------------------------------------
     # KEY INSIGHTS
     # -------------------------------------------------------------------------
+
     with col_b2:
 
-        top_loss_month = (
-            filtered_debit
-            .groupby(
-                'Month_Year'
-            )[
-                'Total amount'
-            ]
-            .sum()
-            .idxmax()
-            if not filtered_debit.empty
-            else "N/A"
-        )
+        if not filtered_debit.empty:
+
+            # -------------------------------------------------------------
+            # HIGHEST LOSS MONTH BY DEBIT VALUE
+            # -------------------------------------------------------------
+
+            monthly_loss = (
+                filtered_debit
+                .groupby(
+                    "Month_Year"
+                )[
+                    "Total amount"
+                ]
+                .sum()
+            )
 
 
-        top_loss_loc = (
-            filtered_debit[
-                'Location'
-            ].mode()[0]
-            if not filtered_debit.empty
-            else "N/A"
-        )
+            top_loss_month = (
+                monthly_loss.idxmax()
+                if not monthly_loss.empty
+                else "N/A"
+            )
+
+
+            # -------------------------------------------------------------
+            # HIGHEST LOSS LOCATION BY DEBIT VALUE
+            # -------------------------------------------------------------
+
+            location_loss = (
+                filtered_debit
+                .groupby(
+                    "Location"
+                )[
+                    "Total amount"
+                ]
+                .sum()
+            )
+
+
+            top_loss_loc = (
+                location_loss.idxmax()
+                if not location_loss.empty
+                else "N/A"
+            )
+
+
+        else:
+
+            top_loss_month = "N/A"
+            top_loss_loc = "N/A"
+
+
+        # -------------------------------------------------------------
+        # KEY INSIGHTS HTML
+        # -------------------------------------------------------------
+
+        insights_html = f"""
+<div class="insight-card">
+
+    <h5 style="margin-top:0px; margin-bottom:8px;">
+        Key Insights
+    </h5>
+
+    <ul style="margin-top:0px; margin-bottom:0px; padding-left:20px; font-size:14px; line-height:1.8;">
+
+        <li>
+            <b>Highest loss month:</b>
+            {top_loss_month}
+        </li>
+
+        <li>
+            <b>Highest loss location:</b>
+            {top_loss_loc}
+        </li>
+
+        <li>
+            <b>Total shipments impacted:</b>
+            {total_shipment_count:,}
+        </li>
+
+        <li>
+            <b>Total loss value:</b>
+            ₹{overall_debit_amount:,.0f}
+        </li>
+
+        <li>
+            <b>Weekly debit AWB count:</b>
+            {weekly_debit_awb_count:,}
+        </li>
+
+    </ul>
+
+</div>
+"""
 
 
         st.markdown(
-            f"""
-            <div class="insight-card">
-
-                <h5 style="
-                    margin-top: 0px;
-                    margin-bottom: 8px;
-                ">
-                    Key Insights
-                </h5>
-
-                <ul style="
-                    margin-top: 0px;
-                    margin-bottom: 0px;
-                    padding-left: 20px;
-                    font-size: 14px;
-                    line-height: 1.8;
-                ">
-
-                    <li>
-                        <b>Highest loss month:</b>
-                        {top_loss_month}
-                    </li>
-
-                    <li>
-                        <b>Highest loss location:</b>
-                        {top_loss_loc}
-                    </li>
-
-                    <li>
-                        <b>Total shipments impacted:</b>
-                        {total_shipment_count:,}
-                    </li>
-
-                    <li>
-                        <b>Total loss value:</b>
-                        ₹{overall_debit_amount:,.0f}
-                    </li>
-
-                </ul>
-
-            </div>
-            """,
+            insights_html,
             unsafe_allow_html=True
         )
