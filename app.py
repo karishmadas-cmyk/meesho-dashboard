@@ -607,7 +607,7 @@ elif page == "DEBIT VIEW":
     # -------------------------------------------------------------------------
     # TOP 5 MONTHLY CONTRIBUTORS - FULL WIDTH
     # -------------------------------------------------------------------------
-    st.markdown("##### TOP 5 MONTHLY CONTRIBUTORS")
+    st.markdown("##### TOP 5 MONTHLY DEBIT CONTRIBUTORS")
 
     if not filtered_debit.empty:
 
