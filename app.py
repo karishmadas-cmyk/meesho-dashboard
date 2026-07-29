@@ -362,12 +362,11 @@ elif page == "DEBIT VIEW":
         filtered_debit = filtered_debit[filtered_debit['Loss Type'] == sel_loss_type]
 
     # --- KPI CARDS ---
-    c1, c2, c3, c4, c5 = st.columns(5)
+    c1, c2, c3, c4 = st.columns(4)
 
     total_shipment_count = len(filtered_debit)
-overall_debit_amount = filtered_debit['Total amount'].sum()
-weekly_shipment_count = len(filtered_weekly)
-weekly_debit_amount = filtered_weekly['Value'].sum()
+    overall_debit_amount = filtered_debit['Total amount'].sum()
+    weekly_debit_amount = filtered_weekly['Value'].sum()
 
     # Calculate Dynamic MoM
     mom_value, mom_color = calculate_debit_mom(debit_df, sel_year, sel_month, sel_location, sel_loss_type)
@@ -388,15 +387,7 @@ weekly_debit_amount = filtered_weekly['Value'].sum()
             </div>
         """, unsafe_allow_html=True)
 
-        with c3:
-        st.markdown(f"""
-            <div class="kpi-card">
-                <div class="kpi-value">{format_count(weekly_shipment_count)}</div>
-                <div class="kpi-label">Shipment count (Weekly Debit)</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    with c4:
+    with c3:
         st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-value">{format_currency(weekly_debit_amount)}</div>
@@ -404,13 +395,14 @@ weekly_debit_amount = filtered_weekly['Value'].sum()
             </div>
         """, unsafe_allow_html=True)
 
-    with c5:
+    with c4:
         st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-value" style="color: {mom_color} !important;">{mom_value}</div>
                 <div class="kpi-label">Debit MoM (vs last month)</div>
             </div>
         """, unsafe_allow_html=True)
+
     st.markdown("<br>", unsafe_allow_html=True)
 
     # --- MIDDLE SECTION: TRENDS ---
