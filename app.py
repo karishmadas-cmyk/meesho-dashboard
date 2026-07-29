@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Styling for KPI Cards & Insight Boxes (Mobile & Dark Mode Friendly)
+# Custom Styling for KPI Cards & Insight Boxes
 st.markdown("""
     <style>
     .kpi-card {
@@ -23,15 +23,18 @@ st.markdown("""
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         color: #212529 !important;
     }
+
     .kpi-value {
         font-size: 26px;
         font-weight: bold;
         color: #d9383a !important;
     }
+
     .kpi-label {
         font-size: 13px;
         color: #555555 !important;
     }
+
     .insight-card {
         background-color: #ffffff;
         border: 1px solid #e0e0e0;
@@ -41,9 +44,10 @@ st.markdown("""
         color: #212529 !important;
         word-wrap: break-word;
     }
-    .insight-card h5, 
-    .insight-card b, 
-    .insight-card li, 
+
+    .insight-card h5,
+    .insight-card b,
+    .insight-card li,
     .insight-card span,
     .insight-card div {
         color: #212529 !important;
@@ -52,14 +56,18 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Standard All 12 Months List
-ALL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+ALL_MONTHS = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+]
+
 
 # -----------------------------------------------------------------------------
 # DATA LOADING & PREPROCESSING
 # -----------------------------------------------------------------------------
 @st.cache_data
 def load_data():
+
     file_path = "Meesho dashboard.xlsx"
 
     debit_df = pd.read_excel(
@@ -494,6 +502,7 @@ if page == "SHORTAGE VIEW":
         ].sum()
     )
 
+
     with c1:
 
         st.markdown(
@@ -509,6 +518,7 @@ if page == "SHORTAGE VIEW":
             """,
             unsafe_allow_html=True
         )
+
 
     with c2:
 
@@ -565,16 +575,19 @@ if page == "SHORTAGE VIEW":
     )
 
 
+    # IMPORTANT:
+    # Render Shortage Insights using st.markdown so HTML is not shown as text.
     with c3:
 
         st.markdown(
             f"""
             <div class="insight-card">
+
                 <h5 style="margin-top: 0px; margin-bottom: 8px;">
                     Shortage Insights
                 </h5>
 
-                <ul style="margin-top: 0px; margin-bottom: 0px; padding-left: 20px;">
+                <ul style="margin-top: 0px; margin-bottom: 0px; padding-left: 20px; font-size: 14px; line-height: 1.8;">
 
                     <li>
                         <b>Highest category:</b>
@@ -607,6 +620,7 @@ if page == "SHORTAGE VIEW":
                     </li>
 
                 </ul>
+
             </div>
             """,
             unsafe_allow_html=True
@@ -927,7 +941,7 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # Filter Data
+    # --- FILTER DATA ---
     filtered_debit = debit_df.copy()
 
     filtered_weekly = weekly_df.copy()
@@ -984,7 +998,7 @@ elif page == "DEBIT VIEW":
     # KPI CARDS
     # -------------------------------------------------------------------------
 
-    # CHANGED: 4 KPI cards -> 5 KPI cards
+    # CHANGED FROM 4 TO 5 KPI CARDS
     c1, c2, c3, c4, c5 = st.columns(5)
 
 
@@ -1005,10 +1019,8 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # -------------------------------------------------------------------------
-    # NEW: WEEKLY DEBIT AWB COUNT
-    # -------------------------------------------------------------------------
-
+    # NEW KPI:
+    # Weekly Debit AWB Count
     weekly_debit_awb_count = (
         filtered_weekly[
             'AWB'
@@ -1027,10 +1039,7 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # -------------------------------------------------------------------------
-    # KPI 1 - EXISTING
-    # -------------------------------------------------------------------------
-
+    # KPI 1
     with c1:
 
         st.markdown(
@@ -1039,6 +1048,7 @@ elif page == "DEBIT VIEW":
                 <div class="kpi-value">
                     {format_count(total_shipment_count)}
                 </div>
+
                 <div class="kpi-label">
                     Shipment count (Overall Debit)
                 </div>
@@ -1048,10 +1058,7 @@ elif page == "DEBIT VIEW":
         )
 
 
-    # -------------------------------------------------------------------------
-    # KPI 2 - EXISTING
-    # -------------------------------------------------------------------------
-
+    # KPI 2
     with c2:
 
         st.markdown(
@@ -1060,6 +1067,7 @@ elif page == "DEBIT VIEW":
                 <div class="kpi-value">
                     {format_currency(overall_debit_amount)}
                 </div>
+
                 <div class="kpi-label">
                     Overall Debit
                 </div>
@@ -1069,10 +1077,7 @@ elif page == "DEBIT VIEW":
         )
 
 
-    # -------------------------------------------------------------------------
-    # KPI 3 - EXISTING
-    # -------------------------------------------------------------------------
-
+    # KPI 3
     with c3:
 
         st.markdown(
@@ -1081,6 +1086,7 @@ elif page == "DEBIT VIEW":
                 <div class="kpi-value">
                     {format_currency(weekly_debit_amount)}
                 </div>
+
                 <div class="kpi-label">
                     Weekly Debit
                 </div>
@@ -1090,10 +1096,7 @@ elif page == "DEBIT VIEW":
         )
 
 
-    # -------------------------------------------------------------------------
-    # KPI 4 - NEW: WEEKLY DEBIT AWB COUNT
-    # -------------------------------------------------------------------------
-
+    # NEW KPI 4
     with c4:
 
         st.markdown(
@@ -1102,6 +1105,7 @@ elif page == "DEBIT VIEW":
                 <div class="kpi-value">
                     {format_count(weekly_debit_awb_count)}
                 </div>
+
                 <div class="kpi-label">
                     Weekly Debit AWB Count
                 </div>
@@ -1111,24 +1115,24 @@ elif page == "DEBIT VIEW":
         )
 
 
-    # -------------------------------------------------------------------------
-    # KPI 5 - EXISTING MOM KPI
-    # -------------------------------------------------------------------------
-
+    # EXISTING KPI 5
     with c5:
 
         st.markdown(
             f"""
             <div class="kpi-card">
+
                 <div
                     class="kpi-value"
                     style="color: {mom_color} !important;"
                 >
                     {mom_value}
                 </div>
+
                 <div class="kpi-label">
                     Debit MoM (vs last month)
                 </div>
+
             </div>
             """,
             unsafe_allow_html=True
@@ -1141,7 +1145,9 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # --- MIDDLE SECTION: TRENDS ---
+    # -------------------------------------------------------------------------
+    # MIDDLE SECTION: TRENDS
+    # -------------------------------------------------------------------------
     col_l1, col_l2 = st.columns(2)
 
 
@@ -1288,7 +1294,6 @@ elif page == "DEBIT VIEW":
     # -------------------------------------------------------------------------
     # EXISTING: TOP 5 MONTHLY CONTRIBUTORS
     # -------------------------------------------------------------------------
-
     st.markdown(
         "##### TOP 5 MONTHLY CONTRIBUTORS"
     )
@@ -1382,9 +1387,14 @@ elif page == "DEBIT VIEW":
         )
 
 
-    # =========================================================================
+    # -------------------------------------------------------------------------
     # NEW: TOP 5 WEEKLY DEBIT CONTRIBUTORS
-    # =========================================================================
+    #
+    # IMPORTANT:
+    # Your Weekly file does not have a "Week" column.
+    # Therefore this chart uses the available Month field and shows
+    # Top 5 Weekly Debit Contributors by Month.
+    # -------------------------------------------------------------------------
 
     st.markdown(
         "<br>",
@@ -1399,7 +1409,7 @@ elif page == "DEBIT VIEW":
 
     if not filtered_weekly.empty:
 
-        # Get Top 5 Locations based on total Weekly Debit Value
+        # Find Top 5 Locations based on Weekly Debit Value
         top_5_weekly_locs = (
             filtered_weekly
             .groupby(
@@ -1414,7 +1424,7 @@ elif page == "DEBIT VIEW":
         )
 
 
-        # Filter data to Top 5 Locations
+        # Filter to Top 5 Locations
         df_weekly_top5 = filtered_weekly[
             filtered_weekly[
                 'Location'
@@ -1424,79 +1434,68 @@ elif page == "DEBIT VIEW":
         ].copy()
 
 
-        # ---------------------------------------------------------------------
-        # WEEKLY CHART
-        # ---------------------------------------------------------------------
-        # The Weekly file needs a column named 'Week'.
-        # If your file already has this column, the chart will work directly.
-
-        if 'Week' in df_weekly_top5.columns:
-
-            df_weekly_top5_grouped = (
-                df_weekly_top5
-                .groupby(
-                    [
-                        'Week',
-                        'Location'
-                    ]
-                )[
-                    'Value'
+        # Group Weekly Debit data by Month and Location
+        df_weekly_top5_grouped = (
+            df_weekly_top5
+            .groupby(
+                [
+                    'Month',
+                    'Location'
                 ]
-                .sum()
-                .reset_index()
+            )[
+                'Value'
+            ]
+            .sum()
+            .reset_index()
+            .sort_values('Month')
+        )
+
+
+        fig_weekly_top5 = px.bar(
+            df_weekly_top5_grouped,
+            x='Month',
+            y='Value',
+            color='Location',
+            barmode='stack'
+        )
+
+
+        fig_weekly_top5.update_xaxes(
+            dtick="M2",
+            tickformat="%b %Y",
+            title="Month"
+        )
+
+
+        fig_weekly_top5.update_yaxes(
+            dtick=2000000,
+            title="Weekly Debit Amount (₹)"
+        )
+
+
+        fig_weekly_top5.update_layout(
+            margin=dict(
+                l=70,
+                r=20,
+                t=35,
+                b=45
+            ),
+            height=320,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
             )
+        )
 
 
-            fig_weekly_top5 = px.bar(
-                df_weekly_top5_grouped,
-                x='Week',
-                y='Value',
-                color='Location',
-                barmode='stack'
-            )
-
-
-            fig_weekly_top5.update_xaxes(
-                title="Week"
-            )
-
-
-            fig_weekly_top5.update_yaxes(
-                dtick=2000000,
-                title="Weekly Debit Amount (₹)"
-            )
-
-
-            fig_weekly_top5.update_layout(
-                margin=dict(
-                    l=70,
-                    r=20,
-                    t=35,
-                    b=45
-                ),
-                height=320,
-                showlegend=True,
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="right",
-                    x=1
-                )
-            )
-
-
-            st.plotly_chart(
-                fig_weekly_top5,
-                use_container_width=True
-            )
-
-
-        else:
-
-            st.warning(
-                "The Weekly file does not contain a 'Week' column."
-            )
+        st.plotly_chart(
+            fig_weekly_top5,
+            use_container_width=True
+        )
 
 
     else:
@@ -1512,7 +1511,9 @@ elif page == "DEBIT VIEW":
     )
 
 
-    # --- BOTTOM SECTION: CATEGORY & INSIGHTS ---
+    # -------------------------------------------------------------------------
+    # BOTTOM SECTION: CATEGORY & INSIGHTS
+    # -------------------------------------------------------------------------
     col_b1, col_b2 = st.columns(2)
 
 
@@ -1533,6 +1534,7 @@ elif page == "DEBIT VIEW":
             .reset_index()
         )
 
+
         fig_donut = px.pie(
             loss_cat,
             values='Total amount',
@@ -1544,6 +1546,7 @@ elif page == "DEBIT VIEW":
                 'In-transit': '#FFC107'
             }
         )
+
 
         fig_donut.update_layout(
             margin=dict(
@@ -1562,6 +1565,7 @@ elif page == "DEBIT VIEW":
                 x=0.5
             )
         )
+
 
         st.plotly_chart(
             fig_donut,
@@ -1593,6 +1597,10 @@ elif page == "DEBIT VIEW":
             else "N/A"
         )
 
+
+        # IMPORTANT:
+        # Keep st.markdown + unsafe_allow_html=True
+        # so the HTML is rendered as a card rather than shown as text.
 
         st.markdown(
             f"""
