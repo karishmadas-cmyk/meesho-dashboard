@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -182,6 +183,10 @@ def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
 # -----------------------------------------------------------------------------
 # NAVIGATION SIDEBAR
 # -----------------------------------------------------------------------------
+LOGO_PATH = "Logo.png"
+if os.path.exists(LOGO_PATH):
+    st.sidebar.image(LOGO_PATH, use_container_width=True)
+
 st.title("📦 Meesho Losses and Debit Tracking Dashboard")
 page = st.sidebar.radio("Navigation", ["SHORTAGE VIEW", "DEBIT VIEW"])
 
@@ -603,7 +608,6 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-
     # -------------------------------------------------------------------------
     # TOP 5 MONTHLY CONTRIBUTORS - FULL WIDTH
     # -------------------------------------------------------------------------
@@ -670,7 +674,6 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-
     # -------------------------------------------------------------------------
     # TOP 5 WEEKLY DEBIT CONTRIBUTORS - FULL WIDTH
     # -------------------------------------------------------------------------
@@ -736,7 +739,6 @@ elif page == "DEBIT VIEW":
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
-
 
     # --- BOTTOM SECTION: CATEGORY & INSIGHTS ---
     col_b1, col_b2 = st.columns(2)
