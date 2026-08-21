@@ -182,8 +182,14 @@ def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
 # -----------------------------------------------------------------------------
 # NAVIGATION SIDEBAR
 # -----------------------------------------------------------------------------
+# Display Logo at top of sidebar
+st.sidebar.image("logo.png", use_container_width=True)
+
+# Navigation section
+st.sidebar.markdown("**Navigation**")
+page = st.sidebar.radio("Navigation", ["SHORTAGE VIEW", "DEBIT VIEW"], label_visibility="collapsed")
+
 st.title("📦 Meesho Losses and Debit Tracking Dashboard")
-page = st.sidebar.radio("Navigation", ["SHORTAGE VIEW", "DEBIT VIEW"])
 
 
 # =============================================================================
@@ -603,7 +609,6 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-
     # -------------------------------------------------------------------------
     # TOP 5 MONTHLY CONTRIBUTORS - FULL WIDTH
     # -------------------------------------------------------------------------
@@ -670,7 +675,6 @@ elif page == "DEBIT VIEW":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-
     # -------------------------------------------------------------------------
     # TOP 5 WEEKLY DEBIT CONTRIBUTORS - FULL WIDTH
     # -------------------------------------------------------------------------
@@ -736,7 +740,6 @@ elif page == "DEBIT VIEW":
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
-
 
     # --- BOTTOM SECTION: CATEGORY & INSIGHTS ---
     col_b1, col_b2 = st.columns(2)
