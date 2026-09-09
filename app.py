@@ -416,8 +416,12 @@ elif page == "DEBIT VIEW":
     years = ["All"] + sorted(list(debit_df['Year'].dropna().unique()))
     sel_year = f1.selectbox("Year", years, index=0)
     
-    months = ["All"] + ALL_MONTHS
-    sel_month = f2.selectbox("Month", months, index=0)
+  months = ALL_MONTHS
+sel_month = f2.multiselect(
+    "Month",
+    months,
+    default=months
+)
     
     locations = ["All"] + list(debit_df['Location'].dropna().unique())
     sel_location = f3.selectbox("Location", locations, index=0)
