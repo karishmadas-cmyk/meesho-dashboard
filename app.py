@@ -541,11 +541,7 @@ elif page == "DEBIT VIEW":
             name="Weekly Debit Amount"
         )
         
-        fig_w.update_xaxes(
-            dtick="M2",
-            tickformat="%b %Y",
-            title="Month"
-        )
+        update_debit_month_axis(fig_w, sel_months)
         
         fig_w.update_yaxes(
             dtick=2000000,
