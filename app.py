@@ -416,8 +416,12 @@ elif page == "DEBIT VIEW":
     years = ["All"] + sorted(list(debit_df['Year'].dropna().unique()))
     sel_year = f1.selectbox("Year", years, index=0)
     
-    months = ["All"] + ALL_MONTHS
-    sel_month = f2.selectbox("Month", months, index=0)
+    months = ALL_MONTHS
+    sel_months = f2.multiselect(
+    "Month",
+    months,
+    default=months
+    )
     
     locations = ["All"] + list(debit_df['Location'].dropna().unique())
     sel_location = f3.selectbox("Location", locations, index=0)
@@ -433,9 +437,14 @@ elif page == "DEBIT VIEW":
         filtered_debit = filtered_debit[filtered_debit['Year'] == sel_year]
         filtered_weekly = filtered_weekly[filtered_weekly['Year'] == sel_year]
         
-    if sel_month != "All":
-        filtered_debit = filtered_debit[filtered_debit['Month_Name'] == sel_month]
-        filtered_weekly = filtered_weekly[filtered_weekly['Month_Name'] == sel_month]
+    if sel_months:
+        filtered_debit = filtered_debit[
+        filtered_debit['Month_Name'].isin(sel_months)
+        ]
+
+        filtered_weekly = filtered_weekly[
+        filtered_weekly['Month_Name'].isin(sel_months)
+        ]
         
     if sel_location != "All":
         filtered_debit = filtered_debit[filtered_debit['Location'] == sel_location]
@@ -453,12 +462,14 @@ elif page == "DEBIT VIEW":
     weekly_debit_amount = filtered_weekly['Value'].sum()
 
     # Calculate Dynamic MoM
+    mom_month = sel_months[-1] if sel_months else "All"
+
     mom_value, mom_color = calculate_debit_mom(
-        debit_df,
-        sel_year,
-        sel_month,
-        sel_location,
-        sel_loss_type
+    debit_df,
+    sel_year,
+    mom_month,
+    sel_location,
+    sel_loss_type
     )
 
     with c1:
