@@ -484,7 +484,7 @@ elif page == "DEBIT VIEW":
         st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-value">{format_currency(overall_debit_amount)}</div>
-                <div class="kpi-label">Overall Debit</div>
+                <div class="kpi-label">Overall Debit (At facility+Shortage)</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -492,7 +492,7 @@ elif page == "DEBIT VIEW":
         st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-value">{format_count(weekly_shipment_count)}</div>
-                <div class="kpi-label">Shipment count (Weekly Debit)</div>
+                <div class="kpi-label">Shipment Count (Weekly Reconciliation)</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -500,7 +500,7 @@ elif page == "DEBIT VIEW":
         st.markdown(f"""
             <div class="kpi-card">
                 <div class="kpi-value">{format_currency(weekly_debit_amount)}</div>
-                <div class="kpi-label">Weekly Debit</div>
+                <div class="kpi-label">Weekly Reconciliation (At facility)</div>
             </div>
         """, unsafe_allow_html=True)
 
