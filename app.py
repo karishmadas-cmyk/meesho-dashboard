@@ -173,11 +173,11 @@ def calculate_debit_mom(df, sel_year, sel_month, sel_location, sel_loss_type):
     pct_change = ((curr_val - prev_val) / prev_val) * 100
     
     if pct_change > 0:
-        return f"+{pct_change:.1f}%", "#d9383a"
+        return f"+{pct_change:.1f}%", "#d9383a"   # Positive = Red
     elif pct_change < 0:
-        return f"{pct_change:.1f}%", "#28a745"
+        return f"{pct_change:.1f}%", "#28a745"     # Negative = Green
     else:
-        return "0.0%", "#666666"
+        return "0.0%", "#28a745"                   # Zero = Green
 
 
 # -----------------------------------------------------------------------------
