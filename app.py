@@ -27,7 +27,6 @@ st.markdown("""
     .kpi-value {
         font-size: 26px;
         font-weight: bold;
-        color: #d9383a !important;
     }
     .kpi-label {
         font-size: 13px;
